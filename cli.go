@@ -15,16 +15,21 @@ import (
 
 var sqlCreateTables string = `
 CREATE TABLE config (
-	identifier text,
-	value text
+	identifier TEXT,
+	value TEXT
 );
 CREATE TABLE clients (
-	identifier text,
-	ip_address text,
-	last_ping  integer
+	identifier TEXT,
+	ip_address TEXT,
+	last_ping  INTEGER
+);
+CREATE TABLE urls (
+	id INTEGER PRIMARY KEY,
+	url TEXT
 );
 `
-var sqlInsertPassword string = "INSERT INTO config(identifier, value) VALUES(?, ?);"
+var sqlInsertUrl string = "INSERT INTO urls(url) VALUES(?);"
+var sqlInsertConfig string = "INSERT INTO config(identifier, value) VALUES(?, ?);"
 
 func createDatabase(database string, password string) {
 	log.Printf("Creating database at %s", database)
@@ -45,9 +50,14 @@ func createDatabase(database string, password string) {
 	}
 
 	if password != "" {
-		if _, err = db.Exec(sqlInsertPassword, "password", password); err != nil {
+		if _, err = db.Exec(sqlInsertConfig, "password", password); err != nil {
 			log.Fatal(err)
 		}
+	}
+
+	// Insert a default URL
+	if _, err = db.Exec(sqlInsertUrl, "https://google.com/"); err != nil {
+		log.Fatal(err)
 	}
 
 	tx.Commit()
