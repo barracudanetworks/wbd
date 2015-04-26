@@ -3,27 +3,43 @@ package web
 import (
 	"log"
 	"net/http"
+	"strings"
 	"text/template"
 
 	"github.com/gorilla/mux"
 )
 
+// TODO: Load from database
+func getUrls(id string) (urls []string) {
+	urls = append(urls,
+		"http://wallboard.bbs.cudaops.com/control/",
+		"http://wallboard.bbs.cudaops.com/leapserv_count/",
+		"https://www.dropcam.com/e/60493aca2b854ce892ad0b9a1c2511a2?autoplay=true",
+		"http://wallboard.bbs.cudaops.com/versions/",
+	)
+	return
+}
+
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	// Create the template variable struct
-	d := struct {
+	id := strings.TrimSpace(r.FormValue("client"))
+	if id != "" {
+		log.Printf("Client %s loaded index from %s", id, r.RemoteAddr)
+	} else {
+		log.Printf("User loaded index from %s", r.RemoteAddr)
+	}
+
+	// Get URLs to show for this client
+	urls := getUrls(id)
+
+	// Load template, parse vars, write to client
+	t, _ := template.ParseFiles("templates/index.html")
+	t.Execute(w, struct {
 		Title string
 		URLs  []string
 	}{
 		"Wallboard Control",
-		make([]string, 4),
-	}
-	d.URLs[0] = "http://wallboard.bbs.cudaops.com/control/"
-	d.URLs[1] = "http://wallboard.bbs.cudaops.com/leapserv_count/"
-	d.URLs[2] = "https://www.dropcam.com/e/60493aca2b854ce892ad0b9a1c2511a2?autoplay=true"
-	d.URLs[3] = "http://wallboard.bbs.cudaops.com/versions/"
-
-	t, _ := template.ParseFiles("templates/index.html")
-	t.Execute(w, d)
+		urls,
+	})
 }
 
 func Start(address string) {
