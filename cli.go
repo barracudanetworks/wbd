@@ -15,7 +15,7 @@ import (
 
 func handleRun(c *cli.Context) {
 	address := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
-	web.Start(address)
+	web.Start(address, c.String("database"))
 }
 
 func handleInstall(c *cli.Context) {
@@ -66,7 +66,7 @@ func handleInstall(c *cli.Context) {
 	}
 
 	// Insert a default URL
-	if err = db.InsertUrl("https://google.com/"); err != nil {
+	if err = db.InsertUrl("http://www.youtube.com/embed/oHg5SJYRHA0?autoplay=1"); err != nil {
 		log.Fatal(err)
 	}
 

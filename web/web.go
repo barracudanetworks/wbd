@@ -6,21 +6,17 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/johnmaguire/wbc/database"
+
 	"github.com/gorilla/mux"
 )
 
-// TODO: Load from database
-func getUrls(id string) (urls []string) {
-	urls = append(urls,
-		"http://wallboard.bbs.cudaops.com/control/",
-		"http://wallboard.bbs.cudaops.com/leapserv_count/",
-		"https://www.dropcam.com/e/60493aca2b854ce892ad0b9a1c2511a2?autoplay=true",
-		"http://wallboard.bbs.cudaops.com/versions/",
-	)
-	return
+type IndexHandler struct {
+	address  string
+	database string
 }
 
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
+func (ih *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimSpace(r.FormValue("client"))
 	if id != "" {
 		log.Printf("Client %s loaded index from %s", id, r.RemoteAddr)
@@ -28,8 +24,19 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("User loaded index from %s", r.RemoteAddr)
 	}
 
+	// Connect to database
+	db, err := database.Connect(ih.database)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Get URLs from database
+	urls, err := db.FetchUrls()
+	if err != nil {
+		log.Fatal(err)
+	}
 	// Get URLs to show for this client
-	urls := getUrls(id)
+	// urls := getUrls(id)
 
 	// Load template, parse vars, write to client
 	t, _ := template.ParseFiles("templates/index.html")
@@ -42,10 +49,11 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func Start(address string) {
+func Start(address string, database string) {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", IndexHandler)
+	ih := &IndexHandler{address, database}
+	r.Handle("/", ih)
 
 	// Register mux router to http /
 	http.Handle("/", r)
