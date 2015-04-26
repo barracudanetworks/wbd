@@ -40,6 +40,6 @@ func Start(address string) {
 	// Register mux router to http /
 	http.Handle("/", r)
 
-	log.Print("Starting web server")
+	log.Print("Launching web server on http://", address)
 	log.Fatal(http.ListenAndServe(address, nil))
 }

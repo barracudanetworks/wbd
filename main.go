@@ -25,8 +25,6 @@ func main() {
 			// TODO: Implement server
 			Action: func(c *cli.Context) {
 				address := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
-				log.Print("Running web server on http://", address)
-
 				web.Start(address)
 			},
 			Flags: []cli.Flag{
