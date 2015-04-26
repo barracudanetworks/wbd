@@ -6,8 +6,8 @@ A small wallboard program. Acts as a server for wallboards to connect to, and co
 Requirements
 ------------
 1. Go must be installed
-2. `GOPATH` must be set
-3. `$GOPATH/bin` must be in your `PATH`
+2. `GOPATH` enviornment variable must be set
+3. `$GOPATH/bin` must be in `PATH` environment variable
 
 Usage
 -----
