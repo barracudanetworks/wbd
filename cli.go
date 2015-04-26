@@ -1,25 +1,80 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
+	"os"
+
+	"github.com/johnmaguire/wbc/web"
 
 	"github.com/codegangsta/cli"
 	"github.com/howeyc/gopass"
-	"github.com/johnmaguire/wbc/web"
+	_ "github.com/mattn/go-sqlite3"
 )
 
+var sqlCreateTables string = `
+CREATE TABLE auth (
+	password text
+);
+CREATE TABLE clients (
+	identifier text,
+	ip_address text,
+	last_ping  integer
+);
+`
+var sqlInsertPassword string = "INSERT INTO auth(password) VALUES(?);"
+
+func createDatabase(database string, password string) {
+	log.Printf("Creating database at %s", database)
+
+	db, err := sql.Open("sqlite3", database)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err := db.Exec(sqlCreateTables); err != nil {
+		log.Fatal(err)
+	}
+
+	if password != "" {
+		if _, err = db.Exec(sqlInsertPassword, password); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	tx.Commit()
+
+	log.Print("Database created")
+}
+
 func handleInstall(c *cli.Context) {
-	var password string
+	log.Print("Creating new installation")
+
+	var (
+		database string
+		password string
+	)
+
+	database = c.String("database")
+
+	// Don't overwrite db if one already exists
+	if _, err := os.Stat(database); err == nil {
+		log.Fatal("database already exists")
+	}
 
 	if resp := confirmDefault("Would you like to setup a password?", true); resp == true {
 		fmt.Printf("Password: ")
 		password = string(gopass.GetPasswd())
-
-		log.Print("Installing SQLite database")
 	}
 
-	log.Print("Admin password: ", password)
+	createDatabase(database, password)
 }
 
 func handleRun(c *cli.Context) {
@@ -27,6 +82,17 @@ func handleRun(c *cli.Context) {
 	web.Start(address)
 }
 
-func handleReset(c *cli.Context) {
-	log.Print("Wiping database")
+func handleClean(c *cli.Context) {
+	database := c.String("database")
+	log.Printf("Removing database at %s", database)
+
+	if _, err := os.Stat(database); err != nil {
+		log.Fatal("database does not exist")
+	}
+
+	if err := os.Remove(database); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print("Database removed")
 }

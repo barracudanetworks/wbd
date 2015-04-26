@@ -25,15 +25,22 @@ func main() {
 
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "address,H",
-					Value: "0.0.0.0",
-					Usage: "address to listen on",
+					Name:   "address,H",
+					Value:  "0.0.0.0",
+					Usage:  "address to listen on",
+					EnvVar: "WBC_ADDRESS",
 				},
 				cli.IntFlag{
 					Name:   "port,p",
 					Value:  80,
 					Usage:  "port to listen on",
-					EnvVar: "WBC_SERVE_PORT",
+					EnvVar: "WBC_PORT",
+				},
+				cli.StringFlag{
+					Name:   "database,d",
+					Value:  "wbc.db",
+					Usage:  "sqlite database location",
+					EnvVar: "WBC_DATABASE",
 				},
 			},
 		},
@@ -43,12 +50,30 @@ func main() {
 			Usage:   "install the database",
 
 			Action: handleInstall,
+
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "database,d",
+					Value:  "wbc.db",
+					Usage:  "sqlite database location",
+					EnvVar: "WBC_DATABASE",
+				},
+			},
 		},
 		{
-			Name:  "reset",
-			Usage: "reset the database (WARNING: very destructive)",
+			Name:  "clean",
+			Usage: "delete the database (WARNING: very destructive)",
 
-			Action: handleReset,
+			Action: handleClean,
+
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:   "database,d",
+					Value:  "wbc.db",
+					Usage:  "sqlite database location",
+					EnvVar: "WBC_DATABASE",
+				},
+			},
 		},
 	}
 
