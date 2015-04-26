@@ -24,6 +24,49 @@ func handleRun(c *cli.Context) {
 	web.Start(address, c.String("database"))
 }
 
+func handleUrl(c *cli.Context) {
+	if _, err := os.Stat(c.String("database")); err != nil {
+		log.Fatal("database does not exist")
+	}
+
+	addUrl, deleteUrl := c.String("add"), c.String("delete")
+	if addUrl != "" && deleteUrl != "" {
+		log.Fatal("Can't both remove and add a URL")
+	}
+
+	db, err := database.Connect(c.String("database"))
+	defer db.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if addUrl != "" {
+		log.Printf("Adding url %s to rotation", addUrl)
+		if err := db.InsertUrl(addUrl); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if deleteUrl != "" {
+		log.Printf("Removing url %s from rotation", deleteUrl)
+		if err := db.DeleteUrl(deleteUrl); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if c.Bool("list") {
+		log.Print("URLs in rotation:")
+		urls, err := db.FetchUrls()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, url := range urls {
+			log.Print("  ", url)
+		}
+	}
+}
+
 func handleInstall(c *cli.Context) {
 	log.Print("Starting installation")
 
@@ -48,10 +91,10 @@ func handleInstall(c *cli.Context) {
 
 	// Create a new connection to the database
 	db, err := database.Connect(path)
+	defer db.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
 
 	// Start a transaction
 	tx, err := db.Conn.Begin()

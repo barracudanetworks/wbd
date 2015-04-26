@@ -47,6 +47,34 @@ func main() {
 			},
 		},
 		{
+			Name:    "url",
+			Aliases: []string{"u"},
+			Usage:   "install the database",
+
+			Action: handleUrl,
+
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "add,a",
+					Usage: "add specified url to rotation",
+				},
+				cli.StringFlag{
+					Name:  "delete,r",
+					Usage: "remove specified url from rotation",
+				},
+				cli.BoolFlag{
+					Name:  "list,l",
+					Usage: "list urls in rotation (can be combined with --delete or --add)",
+				},
+				cli.StringFlag{
+					Name:   "database,d",
+					Value:  "wbc.db",
+					Usage:  "sqlite database location",
+					EnvVar: "WBC_DATABASE",
+				},
+			},
+		},
+		{
 			Name:    "install",
 			Aliases: []string{"i"},
 			Usage:   "install the database",

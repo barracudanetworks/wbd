@@ -17,9 +17,12 @@ CREATE TABLE urls (
 	url TEXT
 );
 `
+
 var sqlInsertUrl string = "INSERT INTO urls(url) VALUES(?);"
+var sqlFetchUrls string = "SELECT url FROM urls;"
+var sqlDeleteUrl string = "DELETE FROM urls WHERE url = ?;"
+
 var sqlInsertConfig string = "INSERT INTO config(identifier, value) VALUES(?, ?);"
-var sqlFetchUrls string = "SELECT url FROM urls"
 
 type Database struct {
 	Conn *sql.DB
@@ -32,6 +35,11 @@ func (db *Database) Close() (err error) {
 
 func (db *Database) InsertUrl(url string) (err error) {
 	_, err = db.Conn.Exec(sqlInsertUrl, url)
+	return
+}
+
+func (db *Database) DeleteUrl(url string) (err error) {
+	_, err = db.Conn.Exec(sqlDeleteUrl, url)
 	return
 }
 
