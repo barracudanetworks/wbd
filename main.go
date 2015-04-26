@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
 	"github.com/codegangsta/cli"
-	"github.com/johnmaguire/wbc/web"
 )
 
 func main() {
@@ -22,11 +20,9 @@ func main() {
 			Name:    "run",
 			Aliases: []string{"r"},
 			Usage:   "run the webserver",
-			// TODO: Implement server
-			Action: func(c *cli.Context) {
-				address := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
-				web.Start(address)
-			},
+
+			Action: handleRun,
+
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "address,H",
@@ -45,18 +41,14 @@ func main() {
 			Name:    "install",
 			Aliases: []string{"i"},
 			Usage:   "install the database",
-			// TODO: Implement installation
-			Action: func(c *cli.Context) {
-				log.Print("Installing SQLite database")
-			},
+
+			Action: handleInstall,
 		},
 		{
 			Name:  "reset",
 			Usage: "reset the database (WARNING: very destructive)",
-			// TODO: Implement wipe
-			Action: func(c *cli.Context) {
-				log.Print("Wiping database")
-			},
+
+			Action: handleReset,
 		},
 	}
 
