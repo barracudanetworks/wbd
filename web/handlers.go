@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/johnmaguire/wbc/database"
 )
@@ -54,6 +55,6 @@ func (ih *WelcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		RemoteAddr string
 	}{
 		id,
-		r.RemoteAddr,
+		r.RemoteAddr[:strings.Index(r.RemoteAddr, ":")],
 	})
 }
