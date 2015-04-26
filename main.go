@@ -49,7 +49,7 @@ func main() {
 		{
 			Name:    "url",
 			Aliases: []string{"u"},
-			Usage:   "install the database",
+			Usage:   "add, remove, or list urls in rotation",
 
 			Action: handleUrl,
 
