@@ -14,6 +14,12 @@ import (
 )
 
 func handleRun(c *cli.Context) {
+	log.Print("Attempting to start web server")
+
+	if _, err := os.Stat(c.String("database")); err != nil {
+		log.Fatal("database does not exist")
+	}
+
 	address := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
 	web.Start(address, c.String("database"))
 }
