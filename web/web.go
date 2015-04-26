@@ -39,7 +39,7 @@ func (ih *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// urls := getUrls(id)
 
 	// Load template, parse vars, write to client
-	t, _ := template.ParseFiles("templates/index.html")
+	t, _ := template.New("index").Parse(indexTemplate)
 	t.Execute(w, struct {
 		Title string
 		URLs  []string

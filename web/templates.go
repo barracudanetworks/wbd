@@ -1,3 +1,6 @@
+package web
+
+var indexTemplate = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -97,3 +100,4 @@
 	<iframe id='frame'>Oops, something went wrong with the Wallboard page!</iframe>
 </body>
 </html>
+`
