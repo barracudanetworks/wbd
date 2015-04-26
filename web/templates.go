@@ -117,10 +117,13 @@ var welcomeTemplate string = `
 		padding: 0;
 	}
 	div.wrapper {
-		position: relative;
+		position: absolute;
+		left: 50%;
 		top: 50%;
-		text-align: center;
-		transform: translateY(-50%);
+		transform: translate(-50%, -50%);
+		-webkit-transform: translate(-50%, -50%);
+		-moz-transform: translate(-50%, -50%);
+		-ms-transform: translate(-50%, -50%);
 	}
 	h1 {
 		font-size: 6em;
@@ -129,8 +132,10 @@ var welcomeTemplate string = `
 </head>
 <body>
 	<div class='wrapper'>
-		{{ if ne .Client "" }}<h1>Client: {{ .Client }}</h1>{{end}}
-		<h1>IP Addr: {{ .RemoteAddr }}</h1>
+		<h1>wbc</h1>
+		{{ if ne .Client "" }}<h2>Client: {{ .Client }}</h2>{{end}}
+		<h2>IP Addr: {{ .RemoteAddr }}</h2>
+		<p>Add a URL or two and this page will disappear. :)</p>
 	</div>
 </body>
 </html>
