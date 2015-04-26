@@ -25,3 +25,4 @@ _testmain.go
 
 # Compiled binary
 wbc
+wbc.db
