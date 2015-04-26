@@ -8,26 +8,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Data struct {
-	Title string
-	URLs  []string
-}
-
-func globalData() Data {
-	urls := make([]string, 4)
-	urls[0] = "http://wallboard.bbs.cudaops.com/control/"
-	urls[1] = "http://wallboard.bbs.cudaops.com/leapserv_count/"
-	urls[2] = "https://www.dropcam.com/e/60493aca2b854ce892ad0b9a1c2511a2?autoplay=true"
-	urls[3] = "http://wallboard.bbs.cudaops.com/versions/"
-
-	return Data{
-		Title: " Wallboard Control | Connecting... ",
-		URLs:  urls,
-	}
-}
-
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	d := globalData()
+	// Create the template variable struct
+	d := struct {
+		Title string
+		URLs  []string
+	}{
+		"Wallboard Control",
+		make([]string, 4),
+	}
+	d.URLs[0] = "http://wallboard.bbs.cudaops.com/control/"
+	d.URLs[1] = "http://wallboard.bbs.cudaops.com/leapserv_count/"
+	d.URLs[2] = "https://www.dropcam.com/e/60493aca2b854ce892ad0b9a1c2511a2?autoplay=true"
+	d.URLs[3] = "http://wallboard.bbs.cudaops.com/versions/"
+
 	t, _ := template.ParseFiles("templates/index.html")
 	t.Execute(w, d)
 }
