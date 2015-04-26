@@ -14,6 +14,8 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "wbc"
 	app.Usage = "take back control from your televisions"
+	app.Version = "0.1.0"
+	app.Author = "John Maguire <contact@johnmaguire.me>"
 
 	app.Commands = []cli.Command{
 		{
