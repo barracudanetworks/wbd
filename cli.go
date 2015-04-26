@@ -14,8 +14,9 @@ import (
 )
 
 var sqlCreateTables string = `
-CREATE TABLE auth (
-	password text
+CREATE TABLE config (
+	identifier text,
+	value text
 );
 CREATE TABLE clients (
 	identifier text,
@@ -23,7 +24,7 @@ CREATE TABLE clients (
 	last_ping  integer
 );
 `
-var sqlInsertPassword string = "INSERT INTO auth(password) VALUES(?);"
+var sqlInsertPassword string = "INSERT INTO config(identifier, value) VALUES(?, ?);"
 
 func createDatabase(database string, password string) {
 	log.Printf("Creating database at %s", database)
@@ -44,7 +45,7 @@ func createDatabase(database string, password string) {
 	}
 
 	if password != "" {
-		if _, err = db.Exec(sqlInsertPassword, password); err != nil {
+		if _, err = db.Exec(sqlInsertPassword, "password", password); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -55,7 +56,7 @@ func createDatabase(database string, password string) {
 }
 
 func handleInstall(c *cli.Context) {
-	log.Print("Creating new installation")
+	log.Print("Starting installation")
 
 	var (
 		database string
@@ -69,7 +70,7 @@ func handleInstall(c *cli.Context) {
 		log.Fatal("database already exists")
 	}
 
-	if resp := confirmDefault("Would you like to setup a password?", true); resp == true {
+	if resp := confirmDefault("Would you like to set a password?", true); resp == true {
 		fmt.Printf("Password: ")
 		password = string(gopass.GetPasswd())
 	}
