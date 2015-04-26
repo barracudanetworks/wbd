@@ -3,22 +3,39 @@ package web
 import (
 	"log"
 	"net/http"
+	"text/template"
 
 	"github.com/gorilla/mux"
 )
 
-type IndexHandler struct{}
+type Data struct {
+	Title string
+	URLs  []string
+}
 
-func (ih *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("It works!"))
+func globalData() Data {
+	urls := make([]string, 4)
+	urls[0] = "http://wallboard.bbs.cudaops.com/control/"
+	urls[1] = "http://wallboard.bbs.cudaops.com/leapserv_count/"
+	urls[2] = "https://www.dropcam.com/e/60493aca2b854ce892ad0b9a1c2511a2?autoplay=true"
+	urls[3] = "http://wallboard.bbs.cudaops.com/versions/"
+
+	return Data{
+		Title: " Wallboard Control | Connecting... ",
+		URLs:  urls,
+	}
+}
+
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	d := globalData()
+	t, _ := template.ParseFiles("templates/index.html")
+	t.Execute(w, d)
 }
 
 func Start(address string) {
 	r := mux.NewRouter()
 
-	// Routes
-	ih := &IndexHandler{}
-	r.Handle("/", ih)
+	r.HandleFunc("/", IndexHandler)
 
 	// Register mux router to http /
 	http.Handle("/", r)
