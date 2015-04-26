@@ -1,11 +1,11 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/johnmaguire/wbc/database"
 	"github.com/johnmaguire/wbc/web"
 
 	"github.com/codegangsta/cli"
@@ -13,70 +13,23 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var sqlCreateTables string = `
-CREATE TABLE config (
-	identifier TEXT,
-	value TEXT
-);
-CREATE TABLE clients (
-	identifier TEXT,
-	ip_address TEXT,
-	last_ping  INTEGER
-);
-CREATE TABLE urls (
-	id INTEGER PRIMARY KEY,
-	url TEXT
-);
-`
-var sqlInsertUrl string = "INSERT INTO urls(url) VALUES(?);"
-var sqlInsertConfig string = "INSERT INTO config(identifier, value) VALUES(?, ?);"
-
-func createDatabase(database string, password string) {
-	log.Printf("Creating database at %s", database)
-
-	db, err := sql.Open("sqlite3", database)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	tx, err := db.Begin()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if _, err := db.Exec(sqlCreateTables); err != nil {
-		log.Fatal(err)
-	}
-
-	if password != "" {
-		if _, err = db.Exec(sqlInsertConfig, "password", password); err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	// Insert a default URL
-	if _, err = db.Exec(sqlInsertUrl, "https://google.com/"); err != nil {
-		log.Fatal(err)
-	}
-
-	tx.Commit()
-
-	log.Print("Database created")
+func handleRun(c *cli.Context) {
+	address := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
+	web.Start(address)
 }
 
 func handleInstall(c *cli.Context) {
 	log.Print("Starting installation")
 
 	var (
-		database string
+		path     string
 		password string
 	)
 
-	database = c.String("database")
+	path = c.String("database")
 
 	// Don't overwrite db if one already exists
-	if _, err := os.Stat(database); err == nil {
+	if _, err := os.Stat(path); err == nil {
 		log.Fatal("database already exists")
 	}
 
@@ -85,12 +38,40 @@ func handleInstall(c *cli.Context) {
 		password = string(gopass.GetPasswd())
 	}
 
-	createDatabase(database, password)
-}
+	log.Printf("Creating database at %s", path)
 
-func handleRun(c *cli.Context) {
-	address := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
-	web.Start(address)
+	// Create a new connection to the database
+	db, err := database.Connect(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// Start a transaction
+	tx, err := db.Conn.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create table schema
+	if err = db.CreateTables(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Insert password if one was given
+	if password != "" {
+		if err = db.InsertConfig("password", password); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// Insert a default URL
+	if err = db.InsertUrl("https://google.com/"); err != nil {
+		log.Fatal(err)
+	}
+
+	tx.Commit()
+	log.Print("Database created")
 }
 
 func handleClean(c *cli.Context) {
