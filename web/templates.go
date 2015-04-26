@@ -1,11 +1,11 @@
 package web
 
-var indexTemplate = `
+var indexTemplate string = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title> {{.Title}} </title>
+	<title> Wallboard Control </title>
 
 	<style type='text/css'>
 	/* Remove padding around iframe */
@@ -88,6 +88,7 @@ var indexTemplate = `
 
 	var urls = [
 		{{ range .URLs }}'{{ . }}',
+		{{ else }}'/welcome?client={{ .Client }}',
 		{{ end }}
 	];
 
@@ -98,6 +99,39 @@ var indexTemplate = `
 </head>
 <body>
 	<iframe id='frame'>Oops, something went wrong with the Wallboard page!</iframe>
+</body>
+</html>
+`
+
+var welcomeTemplate string = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title> Welcome </title>
+	<style type='text/css'>
+	html, body {
+		height: 100%;
+		width: 100%;
+		margin: 0;
+		padding: 0;
+	}
+	div.wrapper {
+		position: relative;
+		top: 50%;
+		text-align: center;
+		transform: translateY(-50%);
+	}
+	h1 {
+		font-size: 6em;
+	}
+	</style>
+</head>
+<body>
+	<div class='wrapper'>
+		{{ if ne .Client "" }}<h1>Client: {{ .Client }}</h1>{{end}}
+		<h1>IP Addr: {{ .RemoteAddr }}</h1>
+	</div>
 </body>
 </html>
 `

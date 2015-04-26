@@ -71,11 +71,6 @@ func handleInstall(c *cli.Context) {
 		}
 	}
 
-	// Insert a default URL
-	if err = db.InsertUrl("http://www.youtube.com/embed/oHg5SJYRHA0?autoplay=1"); err != nil {
-		log.Fatal(err)
-	}
-
 	tx.Commit()
 	log.Print("Database created")
 }
