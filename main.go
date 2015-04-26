@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/codegangsta/cli"
+	"github.com/johnmaguire/wbc/web"
 )
 
 func main() {
@@ -22,7 +24,10 @@ func main() {
 			Usage:   "run the webserver",
 			// TODO: Implement server
 			Action: func(c *cli.Context) {
-				log.Print("Listening on ", c.String("address"), ":", c.String("port"))
+				address := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
+				log.Print("Listening on ", address)
+
+				web.Start(address)
 			},
 			Flags: []cli.Flag{
 				cli.StringFlag{
