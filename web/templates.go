@@ -136,6 +136,29 @@ const (
 			this.load(this.urls[this.currentIndex]);
 		};
 
+		this.pause = function(duration) {
+			// If we're already paused, bail
+			if (typeof this._load !== 'undefined') { return; }
+
+			// Save this.load and noop it
+			this._load = this.load;
+			this.load = function(url) { }
+
+			setInterval(function() {
+				this.resume();
+			}, duration * 1000);
+		}
+
+		this.resume = function() {
+			if (typeof this._load === 'undefined') { return; }
+
+			// Return the function
+			this.load = this._load;
+
+			// Load the page we should be on
+			this.load(this.urls[this.currentIndex]);
+		}
+
 		this.rotateEvery = function(duration) {
 			if (typeof this.interval !== 'undefined') {
 				clearInterval(this.interval);
@@ -160,7 +183,7 @@ const (
 		conn.onopen = function(evt) {
 			console.log("Connected to websocket server");
 			conn.send(JSON.stringify({
-				"Action": "sendUrls"
+				"action": "sendUrls"
 			}));
 		}
 		conn.onclose = function(evt) {
@@ -169,15 +192,20 @@ const (
 		conn.onmessage = function(evt) {
 			message = JSON.parse(evt.data);
 
-			if (typeof message.Action === 'undefined')
+			if (typeof message.action === 'undefined')
 			{
 				console.error("No action in message from server:", message)
 				return;
 			}
 
-			switch (message.Action) {
+			switch (message.action) {
 			case 'updateUrls':
-				rotator.setUrls(message.Data.URLs);
+				rotator.setUrls(message.data.urls);
+
+				break;
+			case 'flashUrl':
+				rotator.pause(message.data.url);
+				rotator.load(message.data.duration);
 
 				break;
 			default:

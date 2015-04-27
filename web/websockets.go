@@ -26,8 +26,8 @@ const (
 )
 
 type websocketMessage struct {
-	Action string
-	Data   interface{}
+	Action string      `json:"action"`
+	Data   interface{} `json:"data"`
 }
 
 // The map is a bit weird in that it's pointer->string, but it's kind of a cheap
@@ -90,7 +90,7 @@ func (h *websocketHub) run(db *database.Database) {
 			message := websocketMessage{
 				Action: "updateUrls",
 				Data: struct {
-					URLs []string
+					URLs []string `json:"urls"`
 				}{
 					urls,
 				},
