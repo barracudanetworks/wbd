@@ -1,6 +1,7 @@
 package web
 
-var indexTemplate string = `
+const (
+	indexTemplate string = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,6 +87,23 @@ var indexTemplate string = `
 		this.init(duration);
 	}
 
+	function wbcConnect(endpoint) {
+		if (typeof endpoint === 'undefined') return false;
+		if (!window["WebSocket"]) return false;
+
+		conn = new WebSocket(endpoint);
+		conn.onopen = function(evt) {
+			console.log("Connected to websocket server");
+			conn.send("Hello");
+		}
+		conn.onclose = function(evt) {
+			console.log("Disconnected from websocket server");
+		}
+		conn.onmessage = function(evt) {
+			console.log("Message from websocket server: ", evt.data);
+		}
+	}
+
 	var urls = [
 		{{ range .URLs }}'{{ . }}',
 		{{ else }}'/welcome?client={{ .Client }}',
@@ -94,6 +112,12 @@ var indexTemplate string = `
 
 	document.addEventListener("DOMContentLoaded", function(event) {
 		var rotate = new SiteRotator('frame', urls, 60);
+		{{ if ne .Client "" }}
+		// Connect to WebSocket server (provides control)
+		wbcConnect("ws://{{.Address}}/ws?client={{ .Client }}");
+		{{ else }}
+		wbcConnect("ws://{{.Address}}/ws");
+		{{ end }}
 	});
 	</script>
 </head>
@@ -103,7 +127,7 @@ var indexTemplate string = `
 </html>
 `
 
-var welcomeTemplate string = `
+	welcomeTemplate string = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -140,3 +164,4 @@ var welcomeTemplate string = `
 </body>
 </html>
 `
+)

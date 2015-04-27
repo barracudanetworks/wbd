@@ -1,51 +1,42 @@
 package web
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"strings"
-
-	"github.com/johnmaguire/wbc/database"
+	"time"
 )
 
-type IndexHandler struct {
-	address  string
-	database string
-}
+type indexHandler struct{ App }
 
-func (ih *IndexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (ih *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := getClient("index", r)
 
-	// Connect to database
-	db, err := database.Connect(ih.database)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// Get URLs from database
-	urls, err := db.FetchUrls()
+	urls, err := ih.App.Database.FetchUrls()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	// Load template, parse vars, write to client
 	t, _ := template.New("index").Parse(indexTemplate)
 	t.Execute(w, struct {
-		Client string
-		URLs   []string
+		Address string
+		Client  string
+		URLs    []string
 	}{
+		ih.App.Address,
 		id,
 		urls,
 	})
 }
 
-type WelcomeHandler struct {
-	address  string
-	database string
-}
+type welcomeHandler struct{ App }
 
-func (ih *WelcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (wh *welcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := getClient("welcome", r)
 
 	// Load template, parse vars, write to client
@@ -57,4 +48,32 @@ func (ih *WelcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		id,
 		r.RemoteAddr[:strings.Index(r.RemoteAddr, ":")],
 	})
+}
+
+type websocketHandler struct{ App }
+
+func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+	}
+	id := getClient("websocket endpoint", r)
+	if id == "" {
+		id = fmt.Sprintf("User (%d)", time.Now().UnixNano())
+	}
+
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	c := &websocketClient{
+		Id:   id,
+		send: make(chan []byte, 256),
+		ws:   ws,
+	}
+
+	h.register <- c
+	go c.writePump()
+	c.readPump()
 }

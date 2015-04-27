@@ -2,7 +2,8 @@ package database
 
 import "database/sql"
 
-var sqlCreateTables string = `
+const (
+	sqlCreateTables string = `
 CREATE TABLE config (
 	identifier TEXT,
 	value TEXT
@@ -18,11 +19,12 @@ CREATE TABLE urls (
 );
 `
 
-var sqlInsertUrl string = "INSERT INTO urls(url) VALUES(?);"
-var sqlFetchUrls string = "SELECT url FROM urls;"
-var sqlDeleteUrl string = "DELETE FROM urls WHERE url = ?;"
+	sqlInsertUrl string = "INSERT INTO urls(url) VALUES(?);"
+	sqlFetchUrls string = "SELECT url FROM urls;"
+	sqlDeleteUrl string = "DELETE FROM urls WHERE url = ?;"
 
-var sqlInsertConfig string = "INSERT INTO config(identifier, value) VALUES(?, ?);"
+	sqlInsertConfig string = "INSERT INTO config(identifier, value) VALUES(?, ?);"
+)
 
 type Database struct {
 	Conn *sql.DB

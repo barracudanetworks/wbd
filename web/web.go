@@ -3,20 +3,34 @@ package web
 import (
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/johnmaguire/wbc/database"
 )
 
-func Start(address string, database string) {
+type App struct {
+	Address  string
+	Database *database.Database
+}
+
+func Start(address string, dbp string) {
 	r := mux.NewRouter()
 
-	ih := &IndexHandler{address, database}
-	wh := &WelcomeHandler{address, database}
-	r.Handle("/", ih)
-	r.Handle("/welcome", wh)
+	// Start websocket hub
+	go h.run()
 
-	// Register mux router to http /
+	db, err := database.Connect(dbp)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	a := App{address, db}
+
+	r.Handle("/", &indexHandler{a})
+	r.Handle("/ws", &websocketHandler{a})
+	r.Handle("/welcome", &welcomeHandler{a})
+
+	// Register mux router
 	http.Handle("/", r)
 
 	log.Print("Launching web server on http://", address)
@@ -24,7 +38,7 @@ func Start(address string, database string) {
 }
 
 func getClient(page string, r *http.Request) (id string) {
-	id = strings.TrimSpace(r.FormValue("client"))
+	id = r.FormValue("client")
 	if id != "" {
 		log.Printf("Client %s loaded %s from %s", id, page, r.RemoteAddr)
 	} else {
