@@ -24,24 +24,53 @@ const (
 	</style>
 
 	<script type='text/javascript'>
-	function SiteRotator (elementId, urls, duration) {
+	function SiteRotator (elementId, defaultUrls, duration) {
 		if (typeof elementId === 'undefined') return;
-		if (typeof urls === 'undefined' || urls.length < 1) return;
+		if (typeof defaultUrls === 'undefined' || defaultUrls.length < 1) return;
 
 		this.elementId = elementId;
-		this.urls = urls;
+		this.defaultUrls = defaultUrls;
+		this.duration = duration;
+
+		this.urls = defaultUrls;
 		this.currentIndex = 0;
 
-		this.init = function(duration) {
+		this.init = function() {
 			// Load first URL when initialized
-			console.log("Initial load")
+			console.log("Initializing rotator");
 
-			this.load(urls[this.currentIndex]);
+			// Try to use the default URLs if we don't have any
+			if (this.urls.length < 1) {
+				if (this.defaultUrls.length < 1) {
+					if (typeof this.interval !== 'undefined') {
+						clearInterval(this.interval);
+					}
+
+					console.error("Can't run rotator -- no URLs to rotate");
+					return;
+				}
+
+				this.urls = this.defaultUrls;
+			}
+
+			this.currentIndex = 0;
+			this.load(this.urls[this.currentIndex]);
 
 			// If a duration is passed in, setup rotation
-			if (typeof duration !== 'undefined')
+			if (typeof this.duration !== 'undefined')
 			{
-				this.rotateEvery(duration * 1000);
+				this.rotateEvery(this.duration);
+			}
+		};
+
+		this.setUrls = function(urls) {
+			if (urls === null || urls === undefined) {
+				urls = [];
+			}
+
+			if (urls != this.urls) {
+				this.urls = urls;
+				this.init();
 			}
 		};
 
@@ -54,7 +83,7 @@ const (
 		this.next = function() {
 			console.log("Moving to next URL");
 
-			if (urls.length < 1) {
+			if (this.urls.length < 1) {
 				return;
 			}
 
@@ -63,11 +92,11 @@ const (
 				this.currentIndex = 0;
 			}
 
-			this.load(urls[this.currentIndex]);
+			this.load(this.urls[this.currentIndex]);
 		};
 
 		this.previous = function() {
-			if (urls.length < 1) {
+			if (this.urls.length < 1) {
 				return;
 			}
 
@@ -76,47 +105,75 @@ const (
 				this.currentIndex = this.urls.length - 1;
 			}
 
-			this.load(urls[this.currentIndex]);
+			this.load(this.urls[this.currentIndex]);
 		};
 
 		this.rotateEvery = function(duration) {
-			console.log("Setting up rotation at every", duration / 1000, "seconds")
-			setInterval(this.next.bind(this), duration);
+			if (typeof this.interval !== 'undefined') {
+				clearInterval(this.interval);
+			}
+
+			var t = this;
+			this.interval = setInterval(function() {
+				t.next();
+			}, duration * 1000);
+
+			console.log("Rotate scheduled for every ", duration, "seconds");
 		};
 
-		this.init(duration);
+		this.init();
 	}
 
-	function wbcConnect(endpoint) {
+	function wbcConnect(endpoint, rotator) {
 		if (typeof endpoint === 'undefined') return false;
 		if (!window["WebSocket"]) return false;
 
 		conn = new WebSocket(endpoint);
 		conn.onopen = function(evt) {
 			console.log("Connected to websocket server");
-			conn.send("Hello");
+			conn.send(JSON.stringify({
+				"Action": "sendUrls"
+			}));
 		}
 		conn.onclose = function(evt) {
 			console.log("Disconnected from websocket server");
 		}
 		conn.onmessage = function(evt) {
-			console.log("Message from websocket server: ", evt.data);
+			message = JSON.parse(evt.data);
+
+			if (typeof message.Action === 'undefined')
+			{
+				console.error("No action in message from server:", message)
+				return;
+			}
+
+			switch (message.Action) {
+			case 'updateUrls':
+				console.log("Current URLs:", rotator.urls);
+				console.log("Updated URLs:", message.Data.urls);
+
+				rotator.setUrls(message.Data.urls);
+
+				break;
+			default:
+				console.error("Unknown action in message from server:", message)
+				break;
+			}
 		}
 	}
 
-	var urls = [
-		{{ range .URLs }}'{{ . }}',
-		{{ else }}'/welcome?client={{ .Client }}',
-		{{ end }}
-	];
-
 	document.addEventListener("DOMContentLoaded", function(event) {
-		var rotate = new SiteRotator('frame', urls, 60);
+		var defaultUrls = [
+			'/welcome?client={{ .Client }}'
+		];
+
+		var rotator = new SiteRotator('frame', defaultUrls, 60);
+
 		{{ if ne .Client "" }}
 		// Connect to WebSocket server (provides control)
-		wbcConnect("ws://{{.Address}}/ws?client={{ .Client }}");
+		wbcConnect("ws://{{.Address}}/ws?client={{ .Client }}", rotator);
 		{{ else }}
-		wbcConnect("ws://{{.Address}}/ws");
+		wbcConnect("ws://{{.Address}}/ws", rotator);
 		{{ end }}
 	});
 	</script>

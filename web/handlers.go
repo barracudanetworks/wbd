@@ -75,5 +75,5 @@ func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.register <- c
 	go c.writePump()
-	c.readPump()
+	c.readPump(wh.App.Database)
 }

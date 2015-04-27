@@ -1,10 +1,12 @@
 package web
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/johnmaguire/wbc/database"
 )
 
 var upgrader = websocket.Upgrader{
@@ -18,8 +20,15 @@ const (
 	pongWait = 60 * time.Second
 	pingWait = (pongWait * 9) / 10
 
+	urlPollWait = pongWait / 2
+
 	maxMessageSize = 512
 )
+
+type websocketMessage struct {
+	Action string
+	Data   map[string][]string
+}
 
 // The map is a bit weird in that it's pointer->string, but it's kind of a cheap
 // hack around issues with overwriting a connection that has the same client name
@@ -37,7 +46,12 @@ var h = websocketHub{
 	connections: make(map[*websocketClient]string),
 }
 
-func (h *websocketHub) run() {
+func (h *websocketHub) run(db *database.Database) {
+	ticker := time.NewTicker(urlPollWait)
+	defer func() {
+		ticker.Stop()
+	}()
+
 	for {
 		select {
 		// Save connection to hub
@@ -49,9 +63,7 @@ func (h *websocketHub) run() {
 		case c := <-h.unregister:
 			if _, ok := h.connections[c]; ok {
 				log.Printf("Removing client '%s'", c.Id)
-
-				delete(h.connections, c)
-				close(c.send)
+				h.CloseConnection(c)
 			}
 
 		// Broadcast messages to clients
@@ -59,16 +71,50 @@ func (h *websocketHub) run() {
 			for c := range h.connections {
 				select {
 				case c.send <- m:
-					log.Printf("Sent to client '%s': %s", c.Id, string(m))
+					log.Printf("Sent message to client '%s': %s", c.Id, string(m))
 				default:
-					log.Printf("Client '%s' looks to have gone away", c.Id)
+					h.CloseConnection(c)
+				}
+			}
 
-					close(c.send)
-					delete(h.connections, c)
+		// Send out URL updates every so often
+		case <-ticker.C:
+			log.Print("Polling for URL changes in database")
+
+			urls, err := db.FetchUrls()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			message := websocketMessage{
+				Action: "updateUrls",
+				Data:   map[string][]string{"urls": urls},
+			}
+
+			// Create a JSON encoder and write to the hub (redirects to broadcast channel)
+			d, err := json.Marshal(message)
+			if err != nil {
+				log.Print(err)
+			}
+
+			// Send the JSON to all connected clients
+			for c := range h.connections {
+				select {
+				case c.send <- d:
+					log.Printf("Sent updated URL list to client '%s'", c.Id)
+				default:
+					h.CloseConnection(c)
 				}
 			}
 		}
 	}
+}
+
+func (h *websocketHub) CloseConnection(c *websocketClient) {
+	log.Printf("Closing connection to client '%s'", c.Id)
+	close(c.send)
+	delete(h.connections, c)
 }
 
 type websocketClient struct {
@@ -100,6 +146,7 @@ func (c *websocketClient) writePump() {
 			if err := c.write(websocket.TextMessage, message); err != nil {
 				return
 			}
+
 		// Send ping on timer
 		case <-ticker.C:
 			if err := c.write(websocket.PingMessage, []byte{}); err != nil {
@@ -109,7 +156,7 @@ func (c *websocketClient) writePump() {
 	}
 }
 
-func (c *websocketClient) readPump() {
+func (c *websocketClient) readPump(db *database.Database) {
 	defer func() {
 		h.unregister <- c
 		c.ws.Close()
@@ -126,7 +173,37 @@ func (c *websocketClient) readPump() {
 			break
 		}
 
-		log.Printf("Received from client '%s': %s", c.Id, string(message))
-		h.broadcast <- message
+		var wm websocketMessage
+		if err := json.Unmarshal(message, &wm); err != nil {
+			log.Print(string(message))
+			log.Print(err)
+			break
+		}
+
+		switch wm.Action {
+		case "sendUrls":
+			log.Printf("Client '%s' requested URLs", c.Id)
+
+			urls, err := db.FetchUrls()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			message := websocketMessage{
+				Action: "updateUrls",
+				Data:   map[string][]string{"urls": urls},
+			}
+
+			// Create a JSON encoder and write to the hub (redirects to broadcast channel)
+			d, err := json.Marshal(message)
+			if err != nil {
+				log.Print(err)
+			}
+
+			c.send <- d
+		default:
+			log.Printf("Unknown action %s from client '%s'", wm.Action, c.Id)
+		}
 	}
 }

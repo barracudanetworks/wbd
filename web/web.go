@@ -16,13 +16,13 @@ type App struct {
 func Start(address string, dbp string) {
 	r := mux.NewRouter()
 
-	// Start websocket hub
-	go h.run()
-
 	db, err := database.Connect(dbp)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Start websocket hub
+	go h.run(db)
 
 	a := App{address, db}
 
