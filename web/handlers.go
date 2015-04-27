@@ -14,6 +14,12 @@ type indexHandler struct{ App }
 func (ih *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := getClient("index", r)
 
+	// Web address to use in template
+	addr := fmt.Sprintf("%s%s", r.Host, ih.App.Address)
+
+	// Show welcome page by default
+	defaultUrl := fmt.Sprintf("http://%s/welcome?client=%s", addr, id)
+
 	// Get URLs from database
 	urls, err := ih.App.Database.FetchUrls()
 	if err != nil {
@@ -22,13 +28,19 @@ func (ih *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Load template, parse vars, write to client
-	t, _ := template.New("index").Parse(indexTemplate)
+	t, err := template.New("index").Parse(indexTemplate)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	t.Execute(w, struct {
-		Address string
-		Client  string
-		URLs    []string
+		Address    template.URL
+		DefaultUrl template.URL
+		Client     string
+		URLs       []string
 	}{
-		fmt.Sprintf("%s%s", r.Host, ih.App.Address),
+		template.URL(addr),
+		template.URL(defaultUrl),
 		id,
 		urls,
 	})
