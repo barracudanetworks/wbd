@@ -247,6 +247,8 @@ const (
 	html, body {
 		height: 100%;
 		width: 100%;
+		background-color: #000;
+		color: #fff;
 		margin: 0;
 		padding: 0;
 	}
