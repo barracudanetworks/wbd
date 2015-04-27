@@ -27,9 +27,15 @@ func main() {
 
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:   "address,H",
+					Name:   "url,w",
+					Value:  "",
+					Usage:  "location urls will be relative to (e.g. \"/wbc\")",
+					EnvVar: "WBC_URL",
+				},
+				cli.StringFlag{
+					Name:   "listen,l",
 					Value:  "0.0.0.0",
-					Usage:  "address to listen on",
+					Usage:  "ip address to listen on",
 					EnvVar: "WBC_ADDRESS",
 				},
 				cli.IntFlag{

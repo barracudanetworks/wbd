@@ -14,13 +14,14 @@ import (
 )
 
 func handleRun(c *cli.Context) {
-	log.Print("Attempting to start web server")
-
 	if _, err := os.Stat(c.String("database")); err != nil {
 		log.Fatal("database does not exist")
 	}
+	log.Printf("Using database %s", c.String("database"))
 
-	address := fmt.Sprintf("%s:%d", c.String("address"), c.Int("port"))
+	log.Print("Attempting to start web server")
+
+	address := fmt.Sprintf("%s:%d", c.String("listen"), c.Int("port"))
 	web.Start(address, c.String("database"))
 }
 
@@ -28,6 +29,7 @@ func handleUrl(c *cli.Context) {
 	if _, err := os.Stat(c.String("database")); err != nil {
 		log.Fatal("database does not exist")
 	}
+	log.Printf("Using database %s", c.String("database"))
 
 	addUrl, deleteUrl := c.String("add"), c.String("delete")
 	if addUrl != "" && deleteUrl != "" {
