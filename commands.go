@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/johnmaguire/wbc/config"
-	"github.com/johnmaguire/wbc/database"
-	"github.com/johnmaguire/wbc/web"
+	"github.com/barracudanetworks/wbc/config"
+	"github.com/barracudanetworks/wbc/database"
+	"github.com/barracudanetworks/wbc/web"
 
 	"github.com/codegangsta/cli"
 	"github.com/howeyc/gopass"

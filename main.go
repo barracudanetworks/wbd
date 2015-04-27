@@ -15,7 +15,7 @@ func main() {
 	app.Name = "wbc"
 	app.Usage = "take back control from your televisions"
 	app.Version = "0.1.0"
-	app.Author = "John Maguire <contact@johnmaguire.me>"
+	app.Author = "John Maguire <jmaguire@barracuda.com>"
 
 	app.Commands = []cli.Command{
 		{
@@ -36,7 +36,7 @@ func main() {
 					Name:   "listen,l",
 					Value:  "0.0.0.0",
 					Usage:  "ip address to listen on",
-					EnvVar: "WBC_ADDRESS",
+					EnvVar: "WBC_LISTEN",
 				},
 				cli.IntFlag{
 					Name:   "port,p",

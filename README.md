@@ -11,7 +11,7 @@ Requirements
 
 Usage
 -----
-1. `go get github.com/johnmaguire/wbc`
+1. `go get github.com/barracudanetworks/wbc`
 2. `wbc install`
 3. `wbc run`
 
@@ -38,7 +38,7 @@ VERSION:
    0.1.0
 
 AUTHOR(S):
-   John Maguire <contact@johnmaguire.me>
+   John Maguire <jmaguire@barracuda.com>
 
 COMMANDS:
    run, r       run the webserver

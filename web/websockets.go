@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/barracudanetworks/wbc/database"
 	"github.com/gorilla/websocket"
-	"github.com/johnmaguire/wbc/database"
 )
 
 var upgrader = websocket.Upgrader{
