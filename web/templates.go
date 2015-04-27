@@ -217,7 +217,7 @@ const (
 
 	document.addEventListener("DOMContentLoaded", function(event) {
 		var defaultUrls = [
-			'{{ .Address }/welcome?client={{ .Client }}'
+			'{{ .Address }}/welcome?client={{ .Client }}'
 		];
 
 		var rotator = new SiteRotator('frame', defaultUrls, 60);
