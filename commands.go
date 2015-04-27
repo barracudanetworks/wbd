@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/johnmaguire/wbc/config"
 	"github.com/johnmaguire/wbc/database"
 	"github.com/johnmaguire/wbc/web"
 
@@ -14,15 +15,26 @@ import (
 )
 
 func handleRun(c *cli.Context) {
-	if _, err := os.Stat(c.String("database")); err != nil {
+	conf := &config.Configuration{
+		ListenAddress: c.String("listen"),
+		ListenPort:    c.Int("port"),
+		WebAddress:    c.String("url"),
+		Database:      c.String("database"),
+	}
+
+	if _, err := os.Stat(conf.Database); err != nil {
 		log.Fatal("database does not exist")
 	}
-	log.Printf("Using database %s", c.String("database"))
+	log.Printf("Using database %s", conf.Database)
 
-	log.Print("Attempting to start web server")
+	if conf.ListenPort == 0 {
+		conf.ListenPort = 80
+	}
+	if conf.ListenAddress == "" {
+		conf.ListenAddress = "0.0.0.0"
+	}
 
-	address := fmt.Sprintf("%s:%d", c.String("listen"), c.Int("port"))
-	web.Start(address, c.String("database"))
+	web.Start(conf)
 }
 
 func handleUrl(c *cli.Context) {

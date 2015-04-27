@@ -46,7 +46,9 @@ var h = websocketHub{
 	connections: make(map[*websocketClient]string),
 }
 
-func (h *websocketHub) run(db *database.Database) {
+func (h *websocketHub) run(a *App) {
+	db := a.Database
+
 	ticker := time.NewTicker(urlPollWait)
 	defer func() {
 		ticker.Stop()

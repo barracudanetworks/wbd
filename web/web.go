@@ -1,11 +1,14 @@
 package web
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/johnmaguire/wbc/config"
 	"github.com/johnmaguire/wbc/database"
+
+	"github.com/gorilla/mux"
 )
 
 type App struct {
@@ -13,18 +16,21 @@ type App struct {
 	Database *database.Database
 }
 
-func Start(address string, dbp string) {
+func Start(c *config.Configuration) {
 	r := mux.NewRouter()
 
-	db, err := database.Connect(dbp)
+	db, err := database.Connect(c.Database)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Start websocket hub
-	go h.run(db)
+	a := App{
+		Address:  c.WebAddress,
+		Database: db,
+	}
 
-	a := App{address, db}
+	// Start websocket hub
+	go h.run(&a)
 
 	r.Handle("/", &indexHandler{a})
 	r.Handle("/ws", &websocketHandler{a})
@@ -33,8 +39,9 @@ func Start(address string, dbp string) {
 	// Register mux router
 	http.Handle("/", r)
 
-	log.Print("Launching web server on http://", address)
-	log.Fatal(http.ListenAndServe(address, nil))
+	addr := fmt.Sprintf("%s:%d", c.ListenAddress, c.ListenPort)
+	log.Printf("Web server listening on http://%s", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func getClient(page string, r *http.Request) (id string) {
