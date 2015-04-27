@@ -33,14 +33,14 @@ type websocketMessage struct {
 // The map is a bit weird in that it's pointer->string, but it's kind of a cheap
 // hack around issues with overwriting a connection that has the same client name
 type websocketHub struct {
-	broadcast   chan []byte
+	broadcast   chan *websocketMessage
 	register    chan *websocketClient
 	unregister  chan *websocketClient
 	connections map[*websocketClient]string
 }
 
 var h = websocketHub{
-	broadcast:   make(chan []byte),
+	broadcast:   make(chan *websocketMessage),
 	register:    make(chan *websocketClient),
 	unregister:  make(chan *websocketClient),
 	connections: make(map[*websocketClient]string),
@@ -73,7 +73,7 @@ func (h *websocketHub) run(a *App) {
 			for c := range h.connections {
 				select {
 				case c.send <- m:
-					log.Printf("Sent message to client '%s': %s", c.Id, string(m))
+					log.Printf("Sent message to client '%s', type '%s'", c.Id, m.Action)
 				default:
 					h.CloseConnection(c)
 				}
@@ -83,31 +83,15 @@ func (h *websocketHub) run(a *App) {
 		case <-ticker.C:
 			log.Print("Polling for URL changes in database")
 
-			urls, err := db.FetchUrls()
+			urlWm, err := urlUpdateMessage(db)
 			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			message := websocketMessage{
-				Action: "updateUrls",
-				Data: struct {
-					URLs []string `json:"urls"`
-				}{
-					urls,
-				},
-			}
-
-			// Create a JSON encoder and write to the hub (redirects to broadcast channel)
-			d, err := json.Marshal(message)
-			if err != nil {
-				log.Print(err)
+				log.Fatal(err)
 			}
 
 			// Send the JSON to all connected clients
 			for c := range h.connections {
 				select {
-				case c.send <- d:
+				case c.send <- urlWm:
 					log.Printf("Sent updated URL list to client '%s'", c.Id)
 				default:
 					h.CloseConnection(c)
@@ -124,9 +108,11 @@ func (h *websocketHub) CloseConnection(c *websocketClient) {
 }
 
 type websocketClient struct {
-	Id   string
+	Id         string
+	Controller bool
+
 	ws   *websocket.Conn
-	send chan []byte
+	send chan *websocketMessage
 }
 
 func (c *websocketClient) write(mt int, payload []byte) error {
@@ -149,13 +135,22 @@ func (c *websocketClient) writePump() {
 				c.write(websocket.CloseMessage, []byte{})
 				return
 			}
-			if err := c.write(websocket.TextMessage, message); err != nil {
+
+			json, err := json.Marshal(message)
+			if err != nil {
+				log.Print(err)
+				return
+			}
+
+			if err := c.write(websocket.TextMessage, json); err != nil {
+				log.Print(err)
 				return
 			}
 
 		// Send ping on timer
 		case <-ticker.C:
 			if err := c.write(websocket.PingMessage, []byte{}); err != nil {
+				log.Print(err)
 				return
 			}
 		}
@@ -181,39 +176,76 @@ func (c *websocketClient) readPump(db *database.Database) {
 
 		var wm websocketMessage
 		if err := json.Unmarshal(message, &wm); err != nil {
-			log.Print(string(message))
 			log.Print(err)
 			break
 		}
 
 		// Respond to a requested action by the client
 		switch wm.Action {
+		case "flagController":
+			log.Printf("Client '%s' flagged as a controller", c.Id)
+			c.Controller = true
+
+			urlWm, err := urlUpdateMessage(db)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			clientWm, err := h.clientUpdateMessage()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			c.send <- urlWm
+			c.send <- clientWm
 		case "sendUrls":
 			log.Printf("Client '%s' requested URLs", c.Id)
 
-			urls, err := db.FetchUrls()
+			urlWm, err := urlUpdateMessage(db)
 			if err != nil {
-				log.Println(err)
-				return
+				log.Fatal(err)
 			}
 
-			message := websocketMessage{
-				Action: "updateUrls",
-				Data: struct {
-					URLs []string
-				}{
-					urls,
-				},
-			}
-
-			d, err := json.Marshal(message)
-			if err != nil {
-				log.Print(err)
-			}
-
-			c.send <- d
+			c.send <- urlWm
 		default:
 			log.Printf("Unknown action %s from client '%s'", wm.Action, c.Id)
 		}
 	}
+}
+
+func urlUpdateMessage(db *database.Database) (wm *websocketMessage, err error) {
+	urls, err := db.FetchUrls()
+	if err != nil {
+		return
+	}
+
+	wm = &websocketMessage{
+		Action: "updateUrls",
+		Data: struct {
+			URLs []string `json:"urls"`
+		}{
+			urls,
+		},
+	}
+
+	return
+}
+
+func (h *websocketHub) clientUpdateMessage() (wm *websocketMessage, err error) {
+	clients := make([]string, 256)
+
+	for c := range h.connections {
+		clients = append(clients, c.Id)
+	}
+
+	wm = &websocketMessage{
+		Action: "updateUrls",
+		Data: struct {
+			Clients []string `json:"clients"`
+		}{
+			clients,
+		},
+	}
+
+	return
 }

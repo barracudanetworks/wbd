@@ -224,9 +224,9 @@ const (
 
 		{{ if ne .Client "" }}
 		// Connect to WebSocket server (provides control)
-		wbcConnect("ws://{{.Address}}/ws?client={{ .Client }}", rotator);
+		wbcConnect("ws://{{ .Address }}/ws?client={{ .Client }}", rotator);
 		{{ else }}
-		wbcConnect("ws://{{.Address}}/ws", rotator);
+		wbcConnect("ws://{{ .Address }}/ws", rotator);
 		{{ end }}
 	});
 	</script>

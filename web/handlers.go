@@ -28,7 +28,7 @@ func (ih *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Client  string
 		URLs    []string
 	}{
-		ih.App.Address,
+		fmt.Sprintf("%s%s", r.Host, ih.App.Address),
 		id,
 		urls,
 	})
@@ -69,7 +69,7 @@ func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	c := &websocketClient{
 		Id:   id,
-		send: make(chan []byte, 256),
+		send: make(chan *websocketMessage),
 		ws:   ws,
 	}
 
