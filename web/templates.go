@@ -177,7 +177,7 @@ const (
 
 			switch (message.Action) {
 			case 'updateUrls':
-				rotator.setUrls(message.Data.urls);
+				rotator.setUrls(message.Data.URLs);
 
 				break;
 			default:

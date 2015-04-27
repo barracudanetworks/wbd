@@ -27,7 +27,7 @@ const (
 
 type websocketMessage struct {
 	Action string
-	Data   map[string][]string
+	Data   interface{}
 }
 
 // The map is a bit weird in that it's pointer->string, but it's kind of a cheap
@@ -89,7 +89,11 @@ func (h *websocketHub) run(db *database.Database) {
 
 			message := websocketMessage{
 				Action: "updateUrls",
-				Data:   map[string][]string{"urls": urls},
+				Data: struct {
+					URLs []string
+				}{
+					urls,
+				},
 			}
 
 			// Create a JSON encoder and write to the hub (redirects to broadcast channel)
@@ -180,6 +184,7 @@ func (c *websocketClient) readPump(db *database.Database) {
 			break
 		}
 
+		// Respond to a requested action by the client
 		switch wm.Action {
 		case "sendUrls":
 			log.Printf("Client '%s' requested URLs", c.Id)
@@ -192,10 +197,13 @@ func (c *websocketClient) readPump(db *database.Database) {
 
 			message := websocketMessage{
 				Action: "updateUrls",
-				Data:   map[string][]string{"urls": urls},
+				Data: struct {
+					URLs []string
+				}{
+					urls,
+				},
 			}
 
-			// Create a JSON encoder and write to the hub (redirects to broadcast channel)
 			d, err := json.Marshal(message)
 			if err != nil {
 				log.Print(err)
