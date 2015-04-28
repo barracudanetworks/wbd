@@ -118,12 +118,14 @@ func handleInstall(c *cli.Context) {
 
 	// Create table schema
 	if err = db.CreateTables(); err != nil {
+		tx.Rollback()
 		log.Fatal(err)
 	}
 
 	// Insert password if one was given
 	if password != "" {
 		if err = db.InsertConfig("password", password); err != nil {
+			tx.Rollback()
 			log.Fatal(err)
 		}
 	}
