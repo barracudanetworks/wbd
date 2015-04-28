@@ -429,15 +429,23 @@ const (
 				}
 			}
 
+			// Handler for input box
 			this.inputElement.keyup(function(evt){
 				if(evt.keyCode == 13) {
 					switch ($(this).val()) {
-					default:
-						message = {
-							action: $(this).val()
-						};
+						default:
+							message = JSON.stringify({
+								action: $(this).val()
+							});
 
-						self.conn.send(JSON.stringify(message));
+							print($(this).val() + ' -> ' + message, "input")
+
+							try {
+								self.conn.send(message);
+							} catch(e) {
+								print("Unable to send message to server", "generic");
+							}
+						break;
 					}
 					$(this).val("");
 				}
