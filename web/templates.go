@@ -391,10 +391,12 @@ const (
 							break;
 						}
 
+						strData = JSON.stringify(message.data);
+
 						if (self.lastUrls == null) {
-							print("URL list received: " + JSON.stringify(message.data), 'output');
+							print("URL list received: " + strData, 'output');
 						} else {
-							print("Updated URL list received: " + JSON.stringify(message.data), 'output');
+							print("Updated URL list received: " + strData, 'output');
 						}
 
 						self.lastUrls = message.data.urls;
@@ -409,10 +411,12 @@ const (
 							break;
 						}
 
+						strData = JSON.stringify(message.data);
+
 						if (self.lastClients == null) {
-							print("List of clients received: " + message.data, 'output');
+							print("List of clients received: " + strData, 'output');
 						} else {
-							print("Updated list of clients received: " + message.data, 'output');
+							print("Updated list of clients received: " + strData, 'output');
 						}
 
 						self.lastClients = message.data.clients;

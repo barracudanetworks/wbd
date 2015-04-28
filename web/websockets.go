@@ -207,6 +207,15 @@ func (c *websocketClient) readPump(db *database.Database) {
 			}
 
 			c.send <- urlWm
+		case "sendClients":
+			log.Printf("Client '%s' requested clients", c.Id)
+
+			clientWm, err := hub.clientUpdateMessage()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			c.send <- clientWm
 		default:
 			log.Printf("Unknown action %s from client '%s'", wm.Action, c.Id)
 		}
@@ -232,14 +241,16 @@ func urlUpdateMessage(db *database.Database) (wm *websocketMessage, err error) {
 }
 
 func (h *websocketHub) clientUpdateMessage() (wm *websocketMessage, err error) {
-	clients := make([]string, 256)
+	var clients []string
 
 	for c := range h.connections {
-		clients = append(clients, c.Id)
+		if c.Id != "" {
+			clients = append(clients, c.Id)
+		}
 	}
 
 	wm = &websocketMessage{
-		Action: "updateUrls",
+		Action: "updateClients",
 		Data: struct {
 			Clients []string `json:"clients"`
 		}{
