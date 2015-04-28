@@ -73,13 +73,10 @@ const (
 		return Math.random() * maxInterval;
 	}
 
-	function SiteRotator (defaultUrls, duration) {
-		if (typeof defaultUrls === 'undefined' || defaultUrls.length < 1) return;
-
+	function SiteRotator (duration) {
 		var frameId = 0;
 		var currentIndex = 0;
-		var urls = defaultUrls;
-		var defaultUrls = defaultUrls;
+		var urls = ['{{ .DefaultUrl }}'];
 		var duration = duration;
 		var rotateInterval;
 
@@ -89,18 +86,11 @@ const (
 
 			// Try to use the default URLs if we don't have any
 			if (urls.length < 1) {
-				if (defaultUrls.length < 1) {
-					if (typeof interval !== 'undefined') {
-						clearInterval(interval);
-					}
-
-					console.error("Can't run rotator -- no URLs to rotate");
-					return;
-				}
-
-				urls = defaultUrls;
+				console.error("Can't run rotator -- no URLs to rotate");
+				return;
 			}
 
+			// Reset index in case this is a re-init
 			currentIndex = 0;
 			this.load(urls[currentIndex]);
 
@@ -112,8 +102,9 @@ const (
 		};
 
 		this.setUrls = function(newUrls) {
-			if (newUrls === null || newUrls === undefined) {
-				newUrls = [];
+			if (typeof newUrls === 'undefined') {
+				console.error("Must pass list of URLs to function setUrls");
+				return;
 			}
 
 			// Only update if URLs changed -- this reinits the rotator
@@ -128,7 +119,7 @@ const (
 		};
 
 		this.load = function(url) {
-			console.log("Loading URL:", url)
+			console.info("Loading URL:", url)
 
 			$("<iframe id='iframe-" + (++frameId) + "'></iframe>").appendTo($('#iframe-wrapper'));
 			$newFrame = $('#iframe-' + frameId);
@@ -176,7 +167,7 @@ const (
 
 			// Save this.load and noop it
 			this._load = this.load;
-			this.load = function(url) { }
+			this.load = function(url) { return; }
 
 			setInterval(function() {
 				this.resume();
@@ -194,17 +185,17 @@ const (
 		}
 
 		this.rotateEvery = function(duration) {
+			// Remove old rotation interval if one is set
 			if (typeof rotateInterval !== 'undefined') {
 				clearInterval(rotateInterval);
 			}
 
 			var self = this;
-
 			rotateInterval = setInterval(function() {
 				self.next();
 			}, duration * 1000);
 
-			console.log("Rotate scheduled for every ", duration, "seconds");
+			console.log("Rotation scheduled for every ", duration, "seconds");
 		};
 
 		this.init();
@@ -266,11 +257,7 @@ const (
 	}
 
 	document.addEventListener("DOMContentLoaded", function(event) {
-		var defaultUrls = [
-			'{{ .DefaultUrl }}'
-		];
-
-		var rotator = new SiteRotator(defaultUrls, 10);
+		var rotator = new SiteRotator(60);
 
 		{{ if ne .Client "" }}
 		// Connect to WebSocket server (provides control)
