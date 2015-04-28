@@ -67,6 +67,27 @@ func (wh *welcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+type adminHandler struct{ App }
+
+func (ah *adminHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	id := ah.App.GetClient(r)
+
+	// Web address to use in template
+	addr := fmt.Sprintf("%s%s", r.Host, ah.App.Address)
+
+	// Load template, parse vars, write to client
+	t, _ := template.New("admin").Parse(adminTemplate)
+	t.Execute(w, struct {
+		Address    template.URL
+		Client     string
+		RemoteAddr string
+	}{
+		template.URL(addr),
+		id,
+		r.RemoteAddr[:strings.Index(r.RemoteAddr, ":")],
+	})
+}
+
 type websocketHandler struct{ App }
 
 func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +114,7 @@ func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ws:   ws,
 	}
 
-	h.register <- c
+	hub.register <- c
 	go c.writePump()
 	c.readPump(wh.App.Database)
 }

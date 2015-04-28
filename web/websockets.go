@@ -34,7 +34,7 @@ type websocketHub struct {
 	connections map[*websocketClient]string
 }
 
-var h = websocketHub{
+var hub = websocketHub{
 	broadcast:   make(chan *websocketMessage),
 	register:    make(chan *websocketClient),
 	unregister:  make(chan *websocketClient),
@@ -159,7 +159,7 @@ func (c *websocketClient) writePump() {
 
 func (c *websocketClient) readPump(db *database.Database) {
 	defer func() {
-		h.unregister <- c
+		hub.unregister <- c
 		c.ws.Close()
 	}()
 
@@ -191,7 +191,7 @@ func (c *websocketClient) readPump(db *database.Database) {
 				log.Fatal(err)
 			}
 
-			clientWm, err := h.clientUpdateMessage()
+			clientWm, err := hub.clientUpdateMessage()
 			if err != nil {
 				log.Fatal(err)
 			}

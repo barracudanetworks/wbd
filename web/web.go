@@ -35,11 +35,12 @@ func Start(c *config.Configuration) {
 	}
 
 	// Goroutine the websocket loop
-	go h.run(&a)
+	go hub.run(&a)
 
 	r.Handle("/", &indexHandler{a})
 	r.Handle("/ws", &websocketHandler{a})
 	r.Handle("/welcome", &welcomeHandler{a})
+	r.Handle("/admin", &adminHandler{a})
 
 	// Register mux router
 	http.Handle("/", r)

@@ -1,8 +1,7 @@
 package web
 
 const (
-	indexTemplate string = `
-<!DOCTYPE html>
+	indexTemplate string = `<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
@@ -237,8 +236,7 @@ const (
 </html>
 `
 
-	welcomeTemplate string = `
-<!DOCTYPE html>
+	welcomeTemplate string = `<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
@@ -272,6 +270,198 @@ const (
 		{{ if ne .Client "" }}<h2>Client: {{ .Client }}</h2>{{end}}
 		<h2>IP Addr: {{ .RemoteAddr }}</h2>
 		<p>Add a URL or two and this page will disappear. :)</p>
+	</div>
+</body>
+</html>
+`
+
+	adminTemplate = `<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title> Wallboard Control </title>
+
+	<style type='text/css'>
+	/* Remove padding around iframe */
+	html, body {
+		margin: 0;
+		height: 100%;
+		overflow: hidden;
+	}
+
+	div#wrapper {
+		height: 100%;
+		width: 100%;
+	}
+
+	div#output-box {
+		height: 94%;
+		width: 100%;
+	}
+
+	div#input-box {
+		width: 100%;
+	}
+	input#input {
+		width: 100%;
+	}
+
+	div.message {
+		padding: 3px;
+		clear: both;
+		border-bottom: 1px solid #fff;
+	}
+
+	div.output-message {
+		background-color: #375EAB;
+		color: #fff;
+		width: 100%;
+	}
+
+	div.input-message {
+		background-color: #E0EBF5;
+		color: #000;
+		width: 100%;
+	}
+	</style>
+
+	<script type='text/javascript' src='https://code.jquery.com/jquery-2.1.3.min.js'></script>
+	<script type='text/javascript'>
+	String.prototype.lpad = function(padString, length) {
+		var str = this;
+		while (str.length < length)
+			str = padString + str;
+		return str;
+	}
+
+	$(function() {
+		function wbcConnect(endpoint, inputElement, outputElement) {
+			if (typeof endpoint === 'undefined') return false;
+			if (typeof inputElement === 'undefined') return false;
+			if (typeof outputElement === 'undefined') return false;
+			if (!window["WebSocket"]) return false;
+
+			this.endpoint = endpoint;
+			this.inputElement = inputElement;
+			this.outputElement = outputElement;
+			this.lastUrls = null;
+
+			var getTime = function() {
+				date = new Date();
+				strDate = date.getHours().toString().lpad("0", 2) + ":" +
+				          date.getMinutes().toString().lpad("0", 2) + ":" +
+				          date.getSeconds().toString().lpad("0", 2);
+
+				return strDate;
+			}
+
+			var print = function(msg, type) {
+				timestamp = getTime()
+				$("<div class='message " + type + "-message'>[" + timestamp + "] " + msg + "</div>").appendTo(this.outputElement);
+			};
+
+			// Create the WebSocket
+			this.conn = new WebSocket(endpoint);
+
+			var self = this;
+
+			this.conn.onopen = function(evt) {
+				console.log("Connected to websocket server");
+				conn.send(JSON.stringify({
+					"action": "flagController"
+				}));
+			}
+			this.conn.onclose = function(evt) {
+				console.log("Disconnected from websocket server");
+			}
+			this.conn.onmessage = function(evt) {
+				message = JSON.parse(evt.data);
+
+				if (typeof message.action === 'undefined')
+				{
+					console.error("No action in message from server:", message)
+					return;
+				}
+
+				switch (message.action) {
+				case 'updateUrls':
+					if (message.data.urls != self.lastUrls)
+					{
+						if (message.data.urls == null) {
+							break;
+						}
+
+						if (self.lastUrls == null) {
+							print("URL list received: " + JSON.stringify(message.data), 'output');
+						} else {
+							print("Updated URL list received: " + JSON.stringify(message.data), 'output');
+						}
+
+						self.lastUrls = message.data.urls;
+					}
+
+					break;
+				case 'updateClients':
+					if (message.data.clients != self.lastClients)
+					{
+						if (message.data.clients == null)
+						{
+							break;
+						}
+
+						if (self.lastClients == null) {
+							print("List of clients received: " + message.data, 'output');
+						} else {
+							print("Updated list of clients received: " + message.data, 'output');
+						}
+
+						self.lastClients = message.data.clients;
+					}
+
+					break;
+				default:
+					console.error("Unknown action in message from server:", message)
+					break;
+				}
+			}
+
+			this.inputElement.keyup(function(evt){
+				if(evt.keyCode == 13) {
+					switch ($(this).val()) {
+					default:
+						message = {
+							action: $(this).val()
+						};
+
+						self.conn.send(JSON.stringify(message));
+					}
+					$(this).val("");
+				}
+			});
+		}
+
+		wbcConnect(
+			{{ if ne .Client "" }}
+			// Connect to WebSocket server (provides control)
+			"ws://{{ .Address }}/ws?client={{ .Client }}",
+			{{ else }}
+			"ws://{{ .Address }}/ws",
+			{{ end }}
+			$('#input'),
+			$('#output-box')
+		);
+
+		$('#input').focus();
+	});
+	</script>
+</head>
+<body>
+	<div id='wrapper'>
+		<div id='output-box'>
+		</div>
+		<div id='input-box'>
+			<input type='text' id='input'>
+		</div>
 	</div>
 </body>
 </html>
