@@ -16,14 +16,25 @@ const (
 		height: 100%;
 		overflow: hidden;
 	}
+	div {
+		margin: 0;
+		padding: 0;
+		height: 100%;
+		width: 100%;
+	}
 
-	iframe {
+	iframe.loaded {
 		border: 0;
 		width: 100%;
 		height: 100%;
 	}
+	iframe.loading {
+		display: none;
+		visibility: hidden;
+	}
 	</style>
 
+	<script type='text/javascript' src='https://code.jquery.com/jquery-2.1.3.min.js'></script>
 	<script type='text/javascript'>
 	var attempts = 1;
 
@@ -62,56 +73,56 @@ const (
 		return Math.random() * maxInterval;
 	}
 
-	function SiteRotator (elementId, defaultUrls, duration) {
-		if (typeof elementId === 'undefined') return;
+	function SiteRotator (defaultUrls, duration) {
 		if (typeof defaultUrls === 'undefined' || defaultUrls.length < 1) return;
 
-		this.elementId = elementId;
-		this.defaultUrls = defaultUrls;
-		this.duration = duration;
-
-		this.urls = defaultUrls;
-		this.currentIndex = 0;
+		var frameId = 0;
+		var currentIndex = 0;
+		var urls = defaultUrls;
+		var defaultUrls = defaultUrls;
+		var duration = duration;
+		var rotateInterval;
 
 		this.init = function() {
 			// Load first URL when initialized
 			console.log("Initializing rotator");
 
 			// Try to use the default URLs if we don't have any
-			if (this.urls.length < 1) {
-				if (this.defaultUrls.length < 1) {
-					if (typeof this.interval !== 'undefined') {
-						clearInterval(this.interval);
+			if (urls.length < 1) {
+				if (defaultUrls.length < 1) {
+					if (typeof interval !== 'undefined') {
+						clearInterval(interval);
 					}
 
 					console.error("Can't run rotator -- no URLs to rotate");
 					return;
 				}
 
-				this.urls = this.defaultUrls;
+				urls = defaultUrls;
 			}
 
-			this.currentIndex = 0;
-			this.load(this.urls[this.currentIndex]);
+			currentIndex = 0;
+			this.load(urls[currentIndex]);
 
 			// If a duration is passed in, setup rotation
-			if (typeof this.duration !== 'undefined')
+			if (typeof duration !== 'undefined')
 			{
-				this.rotateEvery(this.duration);
+				this.rotateEvery(duration);
 			}
 		};
 
-		this.setUrls = function(urls) {
-			if (urls === null || urls === undefined) {
-				urls = [];
+		this.setUrls = function(newUrls) {
+			if (newUrls === null || newUrls === undefined) {
+				newUrls = [];
 			}
 
 			// Only update if URLs changed -- this reinits the rotator
-			if (this.urls.equals(urls) === false) {
-				console.log("Current URLs:", this.urls);
-				console.log("Updated URLs:", urls);
+			if (urls.equals(newUrls) === false) {
+				console.log("Current URLs:", urls);
+				console.log("Updated URLs:", newUrls);
 
-				this.urls = urls;
+				urls = newUrls;
+
 				this.init();
 			}
 		};
@@ -119,35 +130,44 @@ const (
 		this.load = function(url) {
 			console.log("Loading URL:", url)
 
-			document.getElementById(this.elementId).src = url;
+			$("<iframe id='iframe-" + (++frameId) + "'></iframe>").appendTo($('#iframe-wrapper'));
+			$newFrame = $('#iframe-' + frameId);
+
+			$newFrame.attr('src', url);
+			$newFrame.addClass('loading');
+
+			$newFrame.on('load', function() {
+				$('#iframe-wrapper iframe.loaded').remove();
+				$(this).removeClass('loading').addClass('loaded');
+			});
 		};
 
 		this.next = function() {
 			console.log("Moving to next URL");
 
-			if (this.urls.length < 1) {
+			if (urls.length < 1) {
 				return;
 			}
 
-			this.currentIndex++;
-			if (this.currentIndex >= this.urls.length) {
-				this.currentIndex = 0;
+			if (++currentIndex >= urls.length) {
+				currentIndex = 0;
 			}
 
-			this.load(this.urls[this.currentIndex]);
+			this.load(urls[currentIndex]);
 		};
 
 		this.previous = function() {
+			console.log("Moving to previous URL");
+
 			if (this.urls.length < 1) {
 				return;
 			}
 
-			this.currentIndex--;
-			if (this.currentIndex < 0) {
-				this.currentIndex = this.urls.length - 1;
+			if (--currentIndex < 0) {
+				currentIndex = urls.length - 1;
 			}
 
-			this.load(this.urls[this.currentIndex]);
+			this.load(urls[currentIndex]);
 		};
 
 		this.pause = function(duration) {
@@ -170,17 +190,18 @@ const (
 			this.load = this._load;
 
 			// Load the page we should be on
-			this.load(this.urls[this.currentIndex]);
+			this.load(urls[currentIndex]);
 		}
 
 		this.rotateEvery = function(duration) {
-			if (typeof this.interval !== 'undefined') {
-				clearInterval(this.interval);
+			if (typeof rotateInterval !== 'undefined') {
+				clearInterval(rotateInterval);
 			}
 
-			var t = this;
-			this.interval = setInterval(function() {
-				t.next();
+			var self = this;
+
+			rotateInterval = setInterval(function() {
+				self.next();
 			}, duration * 1000);
 
 			console.log("Rotate scheduled for every ", duration, "seconds");
@@ -249,7 +270,7 @@ const (
 			'{{ .DefaultUrl }}'
 		];
 
-		var rotator = new SiteRotator('frame', defaultUrls, 60);
+		var rotator = new SiteRotator(defaultUrls, 10);
 
 		{{ if ne .Client "" }}
 		// Connect to WebSocket server (provides control)
@@ -261,7 +282,9 @@ const (
 	</script>
 </head>
 <body>
-	<iframe id='frame'>Oops, something went wrong with the Wallboard page!</iframe>
+	<div id='iframe-wrapper'>
+		<iframe id='iframe-0' class='loaded' src='{{ .DefaultUrl }}'>Oops, something went wrong with the Wallboard page!</iframe>
+	</div>
 </body>
 </html>
 `
