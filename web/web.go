@@ -16,6 +16,11 @@ type App struct {
 	Database *database.Database
 }
 
+func (a *App) GetClient(r *http.Request) (id string) {
+	id = r.FormValue("client")
+	return
+}
+
 func Start(c *config.Configuration) {
 	r := mux.NewRouter()
 
@@ -29,7 +34,7 @@ func Start(c *config.Configuration) {
 		Database: db,
 	}
 
-	// Start websocket hub
+	// Goroutine the websocket loop
 	go h.run(&a)
 
 	r.Handle("/", &indexHandler{a})
@@ -42,14 +47,4 @@ func Start(c *config.Configuration) {
 	addr := fmt.Sprintf("%s:%d", c.ListenAddress, c.ListenPort)
 	log.Printf("Web server listening on http://%s", addr)
 	log.Fatal(http.ListenAndServe(addr, nil))
-}
-
-func getClient(page string, r *http.Request) (id string) {
-	id = r.FormValue("client")
-	if id != "" {
-		log.Printf("Client %s loaded %s from %s", id, page, r.RemoteAddr)
-	} else {
-		log.Printf("User loaded %s from %s", page, r.RemoteAddr)
-	}
-	return
 }

@@ -9,11 +9,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
-
 const (
 	writeWait = 10 * time.Second
 
@@ -44,6 +39,11 @@ var h = websocketHub{
 	register:    make(chan *websocketClient),
 	unregister:  make(chan *websocketClient),
 	connections: make(map[*websocketClient]string),
+}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 func (h *websocketHub) run(a *App) {
