@@ -23,6 +23,8 @@ const (
 	</style>
 
 	<script type='text/javascript'>
+	var attempts = 1;
+
 	Array.prototype.equals = function (array) {
 		// if the other array is a falsy value, return
 		if (!array)
@@ -45,6 +47,17 @@ const (
 			}
 		}
 		return true;
+	}
+
+	function generateInterval(k) {
+		var maxInterval = (Math.pow(2, k) - 1) * 1000;
+
+		if (maxInterval > 30*1000) {
+			maxInterval = 30*1000; // If the generated interval is more than 30 seconds, truncate it down to 30 seconds.
+		}
+
+		// generate the interval to a random number between 0 and the maxInterval determined from above
+		return Math.random() * maxInterval;
 	}
 
 	function SiteRotator (elementId, defaultUrls, duration) {
@@ -184,9 +197,24 @@ const (
 			conn.send(JSON.stringify({
 				"action": "sendUrls"
 			}));
+
+			// reset reconnection counter
+			attempts = 1;
 		}
 		conn.onclose = function(evt) {
 			console.log("Disconnected from websocket server");
+
+			// attempt reconnection
+			var time = generateInterval(attempts);
+			console.log("Attempting reconnection in " + time + " milliseconds")
+
+			setTimeout(function() {
+				console.log("Attempting reconnection");
+
+				attempts++;
+
+				wbcConnect(endpoint, rotator);
+			}, time);
 		}
 		conn.onmessage = function(evt) {
 			message = JSON.parse(evt.data);
@@ -335,6 +363,19 @@ const (
 	}
 
 	$(function() {
+		var attempts = 1;
+
+		function generateInterval(k) {
+			var maxInterval = (Math.pow(2, k) - 1) * 1000;
+
+			if (maxInterval > 30*1000) {
+				maxInterval = 30*1000; // If the generated interval is more than 30 seconds, truncate it down to 30 seconds.
+			}
+
+			// generate the interval to a random number between 0 and the maxInterval determined from above
+			return Math.random() * maxInterval;
+		}
+
 		function wbcConnect(endpoint, inputElement, outputElement) {
 			if (typeof endpoint === 'undefined') return false;
 			if (typeof inputElement === 'undefined') return false;
@@ -367,13 +408,39 @@ const (
 
 			this.conn.onopen = function(evt) {
 				console.log("Connected to websocket server");
+				print("Connected to server!", "generic")
+
+				// reset connection attempt counter
+				attempts = 1;
+
 				conn.send(JSON.stringify({
 					"action": "flagController"
 				}));
 			}
+
 			this.conn.onclose = function(evt) {
 				console.log("Disconnected from websocket server");
+
+				// Don't print disconnection message on every reconnection
+				// attempt
+				if (attempts == 1)
+				{
+					print("Disconnected from server!", "generic")
+				}
+
+				// attempt reconnection
+				var time = generateInterval(attempts);
+				console.log("Attempting reconnection in " + time + " milliseconds")
+
+				setTimeout(function() {
+					console.log("Attempting reconnection");
+
+					attempts++;
+
+					wbcConnect(endpoint, inputElement, outputElement);
+				}, time);
 			}
+
 			this.conn.onmessage = function(evt) {
 				message = JSON.parse(evt.data);
 
