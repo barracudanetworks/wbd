@@ -421,6 +421,28 @@ const (
 				conn.send(JSON.stringify({
 					"action": "flagController"
 				}));
+
+				// Handler for input box
+				self.inputElement.bind('keyup.send', function(evt) {
+					if(evt.keyCode == 13) {
+						switch ($(this).val()) {
+							default:
+								message = JSON.stringify({
+									action: $(this).val()
+								});
+
+								print($(this).val() + ' -> ' + message, "input")
+
+								try {
+									self.conn.send(message);
+								} catch(e) {
+									print("Unable to send message to server", "generic");
+								}
+							break;
+						}
+						$(this).val("");
+					}
+				});
 			}
 
 			this.conn.onclose = function(evt) {
@@ -432,6 +454,9 @@ const (
 				{
 					print("Disconnected from server!", "generic")
 				}
+
+				// get rid of the input send handler
+				self.inputElement.unbind('keyup.send');
 
 				// attempt reconnection
 				var time = generateInterval(attempts);
@@ -500,28 +525,6 @@ const (
 					break;
 				}
 			}
-
-			// Handler for input box
-			this.inputElement.keyup(function(evt){
-				if(evt.keyCode == 13) {
-					switch ($(this).val()) {
-						default:
-							message = JSON.stringify({
-								action: $(this).val()
-							});
-
-							print($(this).val() + ' -> ' + message, "input")
-
-							try {
-								self.conn.send(message);
-							} catch(e) {
-								print("Unable to send message to server", "generic");
-							}
-						break;
-					}
-					$(this).val("");
-				}
-			});
 		}
 
 		wbcConnect(
