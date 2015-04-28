@@ -1,5 +1,7 @@
 package web
 
+// TODO: Clean up the Javascript (wrap bits in separate template consts)
+
 const (
 	indexTemplate string = `<!DOCTYPE html>
 <html lang="en">
@@ -323,6 +325,8 @@ const (
 	}
 
 	div#output-box {
+		overflow-y: scroll;
+		overflow-x: hidden;
 		height: 94%;
 		width: 100%;
 	}
@@ -399,6 +403,7 @@ const (
 			var print = function(msg, type) {
 				timestamp = getTime()
 				$("<div class='message " + type + "-message'>[" + timestamp + "] " + msg + "</div>").appendTo(this.outputElement);
+				this.outputElement.scrollTop(this.outputElement.prop("scrollHeight"));
 			};
 
 			// Create the WebSocket
