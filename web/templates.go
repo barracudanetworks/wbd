@@ -435,21 +435,40 @@ const (
 				// Handler for input box
 				self.inputElement.bind('keyup.send', function(evt) {
 					if(evt.keyCode == 13) {
+						// Generate message to send based on input
 						switch ($(this).val()) {
+							case 'sendUrls':
+							case 'urls':
+								message = JSON.stringify({
+									action: 'sendUrls'
+								});
+							break;
+
+							case 'sendClients':
+							case 'clients':
+								message = JSON.stringify({
+									action: 'sendClients'
+								});
+							break;
+
 							default:
+								// Try to send the message as an action
 								message = JSON.stringify({
 									action: $(this).val()
 								});
-
-								print($(this).val() + ' -> ' + message, "input")
-
-								try {
-									self.conn.send(message);
-								} catch(e) {
-									print("Unable to send message to server", "generic");
-								}
 							break;
 						}
+
+						// Print input and generated message
+						print($(this).val() + ' -> ' + message, "input")
+
+						try {
+							self.conn.send(message);
+						} catch(e) {
+							print("Unable to send message to server", "generic");
+						}
+
+						// Clear input line
 						$(this).val("");
 					}
 				});
