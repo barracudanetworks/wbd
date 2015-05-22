@@ -1,6 +1,7 @@
 package web
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"time"
@@ -59,6 +60,24 @@ func (h *websocketHub) run(a *App) {
 		// Save connection to hub
 		case c := <-h.register:
 			log.Printf("Added client '%s' to the hub", c.Id)
+
+			if !c.Generic {
+				// get client info and touch last ping
+				client, err := db.GetClient(c.Id)
+				switch {
+				case err == sql.ErrNoRows:
+					log.Printf("Unknown client, creating record")
+					db.InsertClient(c.Id, c.IpAddress)
+				case err != nil:
+					log.Fatal(err)
+				default:
+					log.Printf("Client last seen %s from %s", client.LastPing, client.IpAddress)
+					db.TouchClient(client.Identifier)
+				}
+			} else {
+				log.Printf("Not attempting to track generic client")
+			}
+
 			h.connections[c] = c.Id
 
 		// Remove connection from hub
@@ -109,7 +128,9 @@ func (h *websocketHub) CloseConnection(c *websocketClient) {
 
 type websocketClient struct {
 	Id         string
+	IpAddress  string
 	Controller bool
+	Generic    bool
 
 	ws   *websocket.Conn
 	send chan *websocketMessage

@@ -94,11 +94,19 @@ func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 	}
+
+	// track whether this is a "registered" client or not
+	var generic bool
+
 	id := wh.App.GetClient(r)
 	if id == "" {
+		generic = true
+
 		id = fmt.Sprintf("User (%d)", time.Now().UnixNano())
 		log.Printf("%s connected to websocket from %s", id, r.RemoteAddr)
 	} else {
+		generic = false
+
 		log.Printf("Client '%s' connected to websocket from %s", id, r.RemoteAddr)
 	}
 
@@ -109,9 +117,11 @@ func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := &websocketClient{
-		Id:   id,
-		send: make(chan *websocketMessage),
-		ws:   ws,
+		Id:        id,
+		Generic:   generic,
+		IpAddress: r.RemoteAddr,
+		send:      make(chan *websocketMessage),
+		ws:        ws,
 	}
 
 	hub.register <- c
