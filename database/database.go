@@ -8,15 +8,30 @@ CREATE TABLE config (
 	identifier TEXT,
 	value TEXT
 );
+
 CREATE TABLE clients (
 	identifier TEXT,
 	ip_address TEXT,
 	last_ping  INTEGER
 );
+
+CREATE TABLE client_url_list (
+    client_id INTEGER,
+    url_list_id INTEGER
+);
+CREATE INDEX client_id_index ON client_url_list (client_id);
+
+CREATE TABLE url_lists (
+    id INTEGER PRIMARY KEY,
+    url_id INTEGER,
+    name TEXT
+);
+
 CREATE TABLE urls (
 	id INTEGER PRIMARY KEY,
 	url TEXT
 );
+
 `
 
 	sqlInsertUrl string = "INSERT INTO urls(url) VALUES(?);"
