@@ -39,6 +39,7 @@ CREATE TABLE url_list_url (
 
 `
 
+	sqlFindUrlId string = "SELECT id FROM urls WHERE url = ?;"
 	sqlInsertUrl string = "INSERT INTO urls(url) VALUES(?);"
 	sqlFetchUrls string = "SELECT url FROM urls;"
 	sqlDeleteUrl string = "DELETE FROM urls WHERE url = ?;"
@@ -50,7 +51,11 @@ CREATE TABLE url_list_url (
 
 	sqlInsertListUrl string = "INSERT INTO url_list_url(url_list_id, url_id) VALUES(?, ?);"
 	sqlDeleteListUrl string = "DELETE FROM url_list_url WHERE id = ?;"
-	sqlFetchListUrls string = "SELECT * FROM url_list_url WHERE url_list_id = ?;"
+	sqlFetchListUrls string = `
+	SELECT url FROM urls
+	INNER JOIN url_list_url ON url_list_url.url_id = urls.id
+	WHERE url_list_id = ?;
+	`
 
 	sqlInsertConfig string = "INSERT INTO config(identifier, value) VALUES(?, ?);"
 )
@@ -91,6 +96,14 @@ func (db *Database) InsertConfig(identifier string, value string) (err error) {
 
 func (db *Database) FindListId(name string) (id int, err error) {
 	row := db.Conn.QueryRow(sqlFindListId, name)
+
+	err = row.Scan(&id)
+
+	return
+}
+
+func (db *Database) FindUrlId(url string) (id int, err error) {
+	row := db.Conn.QueryRow(sqlFindUrlId, url)
 
 	err = row.Scan(&id)
 
@@ -170,6 +183,23 @@ func (db *Database) FetchListUrls(name string) (urls []string, err error) {
 
 	return
 }
+
+func (db *Database) AssignUrlToList(name string, url string) (err error) {
+	list_id, err := db.FindListId(name)
+	if err != nil {
+		return
+	}
+
+	url_id, err := db.FindUrlId(url)
+	if err != nil {
+		return
+	}
+
+	_, err = db.Conn.Exec(sqlInsertListUrl, list_id, url_id)
+	return
+
+}
+
 func (db *Database) CreateTables() (err error) {
 	// Run SQL to create necessary schema
 	_, err = db.Conn.Exec(sqlCreateTables)

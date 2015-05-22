@@ -81,6 +81,28 @@ func handleUrl(c *cli.Context) {
 	}
 }
 
+func handleAssign(c *cli.Context) {
+	if _, err := os.Stat(c.String("database")); err != nil {
+		log.Fatal("database does not exist")
+	}
+	log.Printf("Using database %s", c.String("database"))
+
+	assignList, assignUrl := c.String("list"), c.String("url")
+	if assignList == "" || assignUrl == "" {
+		log.Fatal("Must specify a URL and a list to assign it to")
+	}
+
+	db, err := database.Connect(c.String("database"))
+	defer db.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := db.AssignUrlToList(assignList, assignUrl); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func handleList(c *cli.Context) {
 	if _, err := os.Stat(c.String("database")); err != nil {
 		log.Fatal("database does not exist")

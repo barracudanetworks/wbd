@@ -109,6 +109,30 @@ func main() {
 			},
 		},
 		{
+			Name:    "assign",
+			Aliases: []string{"l"},
+			Usage:   "assign a url to a list",
+
+			Action: handleAssign,
+
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "list,l",
+					Usage: "target list",
+				},
+				cli.StringFlag{
+					Name:  "url,u",
+					Usage: "url to assign to list",
+				},
+				cli.StringFlag{
+					Name:   "database,d",
+					Value:  "wbd.db",
+					Usage:  "sqlite database location",
+					EnvVar: "WBD_DATABASE",
+				},
+			},
+		},
+		{
 			Name:    "install",
 			Aliases: []string{"i"},
 			Usage:   "install the database",
