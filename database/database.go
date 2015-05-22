@@ -18,7 +18,7 @@ CREATE TABLE clients (
 	identifier  TEXT NOT NULL,
 	ip_address  TEXT NOT NULL,
 	last_ping   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	url_list_id INTEGER
+	url_list_id INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE url_lists (
@@ -45,7 +45,7 @@ CREATE TABLE url_list_url (
 	VALUES(?, ?);
 	`
 	sqlGetClient string = `
-	SELECT identifier, timestamp, ip_address, url_list_id
+	SELECT identifier, last_ping, ip_address, url_list_id
 	FROM clients WHERE identifier = ?;
 	`
 	sqlSetClientList      string = "UPDATE clients SET url_list_id = ? WHERE identifer = ?;"
@@ -81,10 +81,10 @@ type Database struct {
 }
 
 type Client struct {
-	identifier  string
-	timestamp   string
-	ip_address  string
-	url_list_id int
+	Identifier string
+	LastPing   string
+	IpAddress  string
+	UrlListId  int
 }
 
 func (db *Database) Close() (err error) {
@@ -119,10 +119,10 @@ func (db *Database) AssignClientToList(name string, client_id string) (err error
 
 func (db *Database) GetClient(identifier string) (client Client, err error) {
 	err = db.Conn.QueryRow(sqlGetClient, identifier).Scan(
-		&client.identifier,
-		&client.timestamp,
-		&client.ip_address,
-		&client.url_list_id)
+		&client.Identifier,
+		&client.LastPing,
+		&client.IpAddress,
+		&client.UrlListId)
 
 	return
 }
