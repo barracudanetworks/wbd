@@ -28,7 +28,7 @@ func TestTableCreation(t *testing.T) {
 func TestClient(t *testing.T) {
 	assert := assert.New(t)
 
-	db, _ := Connect("_memory_")
+	db, _ := Connect(":memory:")
 	defer db.Close()
 
 	db.CreateTables()
