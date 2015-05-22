@@ -9,11 +9,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
-
 const (
 	writeWait = 10 * time.Second
 
@@ -39,11 +34,16 @@ type websocketHub struct {
 	connections map[*websocketClient]string
 }
 
-var h = websocketHub{
+var hub = websocketHub{
 	broadcast:   make(chan *websocketMessage),
 	register:    make(chan *websocketClient),
 	unregister:  make(chan *websocketClient),
 	connections: make(map[*websocketClient]string),
+}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 func (h *websocketHub) run(a *App) {
@@ -159,7 +159,7 @@ func (c *websocketClient) writePump() {
 
 func (c *websocketClient) readPump(db *database.Database) {
 	defer func() {
-		h.unregister <- c
+		hub.unregister <- c
 		c.ws.Close()
 	}()
 
@@ -191,10 +191,7 @@ func (c *websocketClient) readPump(db *database.Database) {
 				log.Fatal(err)
 			}
 
-			clientWm, err := h.clientUpdateMessage()
-			if err != nil {
-				log.Fatal(err)
-			}
+			clientWm := hub.clientUpdateMessage()
 
 			c.send <- urlWm
 			c.send <- clientWm
@@ -207,6 +204,12 @@ func (c *websocketClient) readPump(db *database.Database) {
 			}
 
 			c.send <- urlWm
+		case "sendClients":
+			log.Printf("Client '%s' requested clients", c.Id)
+
+			clientWm := hub.clientUpdateMessage()
+
+			c.send <- clientWm
 		default:
 			log.Printf("Unknown action %s from client '%s'", wm.Action, c.Id)
 		}
@@ -231,15 +234,21 @@ func urlUpdateMessage(db *database.Database) (wm *websocketMessage, err error) {
 	return
 }
 
-func (h *websocketHub) clientUpdateMessage() (wm *websocketMessage, err error) {
-	clients := make([]string, 256)
-
+func (h *websocketHub) GetClients() (clients []string) {
 	for c := range h.connections {
-		clients = append(clients, c.Id)
+		if c.Id != "" {
+			clients = append(clients, c.Id)
+		}
 	}
 
+	return
+}
+
+func (h *websocketHub) clientUpdateMessage() (wm *websocketMessage) {
+	clients := h.GetClients()
+
 	wm = &websocketMessage{
-		Action: "updateUrls",
+		Action: "updateClients",
 		Data: struct {
 			Clients []string `json:"clients"`
 		}{

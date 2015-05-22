@@ -12,7 +12,12 @@ import (
 type indexHandler struct{ App }
 
 func (ih *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := getClient("index", r)
+	id := ih.App.GetClient(r)
+	if id != "" {
+		log.Printf("Client '%s' loaded index from %s", id, r.RemoteAddr)
+	} else {
+		log.Printf("User loaded index from %s", r.RemoteAddr)
+	}
 
 	// Web address to use in template
 	addr := fmt.Sprintf("%s%s", r.Host, ih.App.Address)
@@ -49,7 +54,7 @@ func (ih *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type welcomeHandler struct{ App }
 
 func (wh *welcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := getClient("welcome", r)
+	id := wh.App.GetClient(r)
 
 	// Load template, parse vars, write to client
 	t, _ := template.New("welcome").Parse(welcomeTemplate)
@@ -62,15 +67,39 @@ func (wh *welcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+type adminHandler struct{ App }
+
+func (ah *adminHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	id := ah.App.GetClient(r)
+
+	// Web address to use in template
+	addr := fmt.Sprintf("%s%s", r.Host, ah.App.Address)
+
+	// Load template, parse vars, write to client
+	t, _ := template.New("admin").Parse(adminTemplate)
+	t.Execute(w, struct {
+		Address    template.URL
+		Client     string
+		RemoteAddr string
+	}{
+		template.URL(addr),
+		id,
+		r.RemoteAddr[:strings.Index(r.RemoteAddr, ":")],
+	})
+}
+
 type websocketHandler struct{ App }
 
 func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 	}
-	id := getClient("websocket endpoint", r)
+	id := wh.App.GetClient(r)
 	if id == "" {
 		id = fmt.Sprintf("User (%d)", time.Now().UnixNano())
+		log.Printf("%s connected to websocket from %s", id, r.RemoteAddr)
+	} else {
+		log.Printf("Client '%s' connected to websocket from %s", id, r.RemoteAddr)
 	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -85,7 +114,7 @@ func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ws:   ws,
 	}
 
-	h.register <- c
+	hub.register <- c
 	go c.writePump()
 	c.readPump(wh.App.Database)
 }
