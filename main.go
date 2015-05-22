@@ -81,6 +81,34 @@ func main() {
 			},
 		},
 		{
+			Name:    "list",
+			Aliases: []string{"l"},
+			Usage:   "add, remove, or list url lists",
+
+			Action: handleList,
+
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "add,a",
+					Usage: "create a new list",
+				},
+				cli.StringFlag{
+					Name:  "delete,r",
+					Usage: "remove an existing list",
+				},
+				cli.BoolFlag{
+					Name:  "list,l",
+					Usage: "list url lists in database (can be combined with --delete or --add)",
+				},
+				cli.StringFlag{
+					Name:   "database,d",
+					Value:  "wbd.db",
+					Usage:  "sqlite database location",
+					EnvVar: "WBD_DATABASE",
+				},
+			},
+		},
+		{
 			Name:    "install",
 			Aliases: []string{"i"},
 			Usage:   "install the database",

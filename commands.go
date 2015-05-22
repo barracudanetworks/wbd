@@ -81,6 +81,59 @@ func handleUrl(c *cli.Context) {
 	}
 }
 
+func handleList(c *cli.Context) {
+	if _, err := os.Stat(c.String("database")); err != nil {
+		log.Fatal("database does not exist")
+	}
+	log.Printf("Using database %s", c.String("database"))
+
+	addList, deleteList := c.String("add"), c.String("delete")
+	if addList != "" && deleteList != "" {
+		log.Fatal("Can't both remove and add a list")
+	}
+
+	db, err := database.Connect(c.String("database"))
+	defer db.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if addList != "" {
+		log.Printf("Creating list %s", addList)
+		if err := db.InsertList(addList); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if deleteList != "" {
+		log.Printf("Deleting list %s", deleteList)
+		if err := db.DeleteList(deleteList); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if c.Bool("list") {
+		log.Print("URL lists defined:")
+		lists, err := db.FetchLists()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, list := range lists {
+			urls, err := db.FetchListUrls(list)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Print("  ", list)
+
+			for _, url := range urls {
+				log.Print("    ", url)
+			}
+		}
+	}
+}
+
 func handleInstall(c *cli.Context) {
 	log.Print("Starting installation")
 
