@@ -214,13 +214,19 @@ func (db *Database) FetchLists() (lists []string, err error) {
 	return
 }
 
-func (db *Database) FetchListUrls(name string) (urls []string, err error) {
+func (db *Database) FetchListUrlsByName(name string) (urls []string, err error) {
 	list_id, err := db.FindListId(name)
 	if err != nil {
 		return
 	}
 
-	rows, err := db.Conn.Query(sqlFetchListUrls, list_id)
+	urls, err = db.FetchListUrlsById(list_id)
+
+	return
+}
+
+func (db *Database) FetchListUrlsById(id int) (urls []string, err error) {
+	rows, err := db.Conn.Query(sqlFetchListUrls, id)
 	if err != nil {
 		return
 	}

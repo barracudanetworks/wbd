@@ -102,7 +102,12 @@ func (h *websocketHub) run(a *App) {
 		case <-ticker.C:
 			log.Print("Polling for URL changes in database")
 
-			urlWm, err := urlUpdateMessage(db)
+			urls, err := db.FetchUrls()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			urlWm, err := urlUpdateMessage(urls)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -207,7 +212,12 @@ func (c *websocketClient) readPump(db *database.Database) {
 			log.Printf("Client '%s' flagged as a controller", c.Id)
 			c.Controller = true
 
-			urlWm, err := urlUpdateMessage(db)
+			urls, err := db.FetchUrls()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			urlWm, err := urlUpdateMessage(urls)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -219,7 +229,36 @@ func (c *websocketClient) readPump(db *database.Database) {
 		case "sendUrls":
 			log.Printf("Client '%s' requested URLs", c.Id)
 
-			urlWm, err := urlUpdateMessage(db)
+			var fetch_global bool = true
+			var urls []string
+
+			if !c.Generic {
+				info, err := db.GetClient(c.Id)
+
+				if err != nil {
+					log.Printf("Couldn't find client info -- fetching all URLs")
+				} else if info.UrlListId != 0 {
+					log.Printf("Fetching URLs from assigned list")
+
+					urls, err = db.FetchListUrlsById(info.UrlListId)
+					if err != nil {
+						log.Printf("Failed to fetch client's list URLs -- fetching all URLs")
+					} else {
+						// found urls already, no need to fetch global url list
+						log.Printf("Fetched URLs for client '%s' from list ID %d", c.Id, info.UrlListId)
+						fetch_global = false
+					}
+				}
+			}
+
+			if fetch_global {
+				urls, err = db.FetchUrls()
+				if err != nil {
+					log.Fatal("Unable to fetch global URLs")
+				}
+			}
+
+			urlWm, err := urlUpdateMessage(urls)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -237,12 +276,7 @@ func (c *websocketClient) readPump(db *database.Database) {
 	}
 }
 
-func urlUpdateMessage(db *database.Database) (wm *websocketMessage, err error) {
-	urls, err := db.FetchUrls()
-	if err != nil {
-		return
-	}
-
+func urlUpdateMessage(urls []string) (wm *websocketMessage, err error) {
 	wm = &websocketMessage{
 		Action: "updateUrls",
 		Data: struct {

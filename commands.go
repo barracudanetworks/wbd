@@ -141,7 +141,7 @@ func handleList(c *cli.Context) {
 		}
 
 		for _, list := range lists {
-			urls, err := db.FetchListUrls(list)
+			urls, err := db.FetchListUrlsByName(list)
 			if err != nil {
 				log.Fatal(err)
 			}
