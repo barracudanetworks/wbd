@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"log"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -187,6 +188,30 @@ func (db *Database) FetchUrls() (urls []string, err error) {
 	}
 
 	err = rows.Err()
+
+	return
+}
+
+func (db *Database) FetchUrlsByClientId(identifier string) (urls []string, err error) {
+	var fetch_global bool = true
+
+	info, err := db.GetClient(identifier)
+
+	if err == nil && info.UrlListId != 0 {
+		urls, err = db.FetchListUrlsById(info.UrlListId)
+		if err == nil {
+			// found urls already, no need to fetch global url list
+			log.Printf("Fetched URLs for client '%s' from list ID %d", identifier, info.UrlListId)
+			fetch_global = false
+		}
+	}
+
+	if fetch_global {
+		urls, err = db.FetchUrls()
+		if err == nil {
+			log.Printf("Fetched all URLs for client '%s'", identifier)
+		}
+	}
 
 	return
 }
