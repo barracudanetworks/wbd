@@ -1,7 +1,5 @@
-# wbc (Wallboard Control)
-A wallboard utility. Runs a full-screened iframe and some Javascript to allow for dynamic updating of wallboards. Useful if you have many clients that you would like to display metrics on.
-
-**NOTE**: This is a work in progress. I am learning Go while writing this program, so please don't expect perfection.
+# wbd (Wallboard Daemon)
+A wallboard daemon. Runs a full-screened iframe and some Javascript that allows for dynamic updating of wallboards. Useful if you have many clients that you would like to display metrics on.
 
 Requirements
 ------------
@@ -11,28 +9,28 @@ Requirements
 
 Usage
 -----
-1. `go get github.com/barracudanetworks/wbc`
-2. `wbc install`
-3. `wbc run`
+1. `go get github.com/barracudanetworks/wbd`
+2. `wbd install`
+3. `wbd run`
 
-If you would like to specify a custom listen address, port, or database location, you may do so with some command-line options (try `wbc help install` or `wbc help run`).
+If you would like to specify a custom listen address, port, or database location, you may do so with some command-line options (try `wbd help install` or `wbd help run`).
 
 How does it work?
 -----------------
-Calling `wbc run` will launch a web server on the address and port you specify (`0.0.0.0:80` by default). The web server runs a simple index page, containing a full screened iframe and some nifty Javascript so as to allow control over what page the client is viewing.
+Calling `wbd run` will launch a web server on the address and port you specify (`0.0.0.0:80` by default). The web server runs a simple index page, containing a full screened iframe and some nifty Javascript so as to allow control over what page the client is viewing.
 
 The Javascript on the page connects back to the Wallboard Control websocket server and listens for commands. The server will keep the client updated with which URLs it should rotate through. Right now, clients can only rotate through a global pre-defined list of URLs. In the future, you will be able to setup a list of URLs to rotate, shuffle, or stagger (have machines show different pages) for all, or specific, clients.
 
-At Barracuda Networks, we use Raspberry Pis hooked up to televisions to drive the wallboards. The wbc server just needs to be run somewhere that the clients can access.
+At Barracuda Networks, we use Raspberry Pis hooked up to televisions to drive the wallboards. The wbd server just needs to be run somewhere that the clients can access.
 
 Command documentation
 ---------------------
 ```
 NAME:
-   wbc - take back control from your televisions
+   wbd - take back control from your televisions
 
 USAGE:
-   wbc [global options] command [command options] [arguments...]
+   wbd [global options] command [command options] [arguments...]
 
 VERSION:
    0.1.0

@@ -12,7 +12,7 @@ func main() {
 	log.SetPrefix("(root) ")
 
 	app := cli.NewApp()
-	app.Name = "wbc"
+	app.Name = "wbd"
 	app.Usage = "take back control from your televisions"
 	app.Version = "0.1.0"
 	app.Author = "John Maguire <jmaguire@barracuda.com>"
@@ -29,26 +29,26 @@ func main() {
 				cli.StringFlag{
 					Name:   "url,w",
 					Value:  "",
-					Usage:  "location urls will be relative to (e.g. \"/wbc\")",
-					EnvVar: "WBC_URL",
+					Usage:  "location urls will be relative to (e.g. \"/wbd\")",
+					EnvVar: "WBD_URL",
 				},
 				cli.StringFlag{
 					Name:   "listen,l",
 					Value:  "0.0.0.0",
 					Usage:  "ip address to listen on",
-					EnvVar: "WBC_LISTEN",
+					EnvVar: "WBD_LISTEN",
 				},
 				cli.IntFlag{
 					Name:   "port,p",
 					Value:  80,
 					Usage:  "port to listen on",
-					EnvVar: "WBC_PORT",
+					EnvVar: "WBD_PORT",
 				},
 				cli.StringFlag{
 					Name:   "database,d",
-					Value:  "wbc.db",
+					Value:  "wbd.db",
 					Usage:  "sqlite database location",
-					EnvVar: "WBC_DATABASE",
+					EnvVar: "WBD_DATABASE",
 				},
 			},
 		},
@@ -74,9 +74,9 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:   "database,d",
-					Value:  "wbc.db",
+					Value:  "wbd.db",
 					Usage:  "sqlite database location",
-					EnvVar: "WBC_DATABASE",
+					EnvVar: "WBD_DATABASE",
 				},
 			},
 		},
@@ -90,9 +90,9 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:   "database,d",
-					Value:  "wbc.db",
+					Value:  "wbd.db",
 					Usage:  "sqlite database location",
-					EnvVar: "WBC_DATABASE",
+					EnvVar: "WBD_DATABASE",
 				},
 			},
 		},
@@ -105,9 +105,9 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:   "database,d",
-					Value:  "wbc.db",
+					Value:  "wbd.db",
 					Usage:  "sqlite database location",
-					EnvVar: "WBC_DATABASE",
+					EnvVar: "WBD_DATABASE",
 				},
 			},
 		},

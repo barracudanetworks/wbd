@@ -175,7 +175,7 @@ const (
 		this.init();
 	}
 
-	function wbcConnect(endpoint, rotator) {
+	function wbdConnect(endpoint, rotator) {
 		if (typeof endpoint === 'undefined') return false;
 		if (!window["WebSocket"]) return false;
 
@@ -224,9 +224,9 @@ const (
 
 		{{ if ne .Client "" }}
 		// Connect to WebSocket server (provides control)
-		wbcConnect("ws://{{ .Address }}/ws?client={{ .Client }}", rotator);
+		wbdConnect("ws://{{ .Address }}/ws?client={{ .Client }}", rotator);
 		{{ else }}
-		wbcConnect("ws://{{ .Address }}/ws", rotator);
+		wbdConnect("ws://{{ .Address }}/ws", rotator);
 		{{ end }}
 	});
 	</script>
@@ -268,7 +268,7 @@ const (
 </head>
 <body>
 	<div class='wrapper'>
-		<h1>wbc</h1>
+		<h1>wbd</h1>
 		{{ if ne .Client "" }}<h2>Client: {{ .Client }}</h2>{{end}}
 		<h2>IP Addr: {{ .RemoteAddr }}</h2>
 		<p>Add a URL or two and this page will disappear. :)</p>

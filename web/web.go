@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/barracudanetworks/wbc/config"
-	"github.com/barracudanetworks/wbc/database"
+	"github.com/barracudanetworks/wbd/config"
+	"github.com/barracudanetworks/wbd/database"
 
 	"github.com/gorilla/mux"
 )

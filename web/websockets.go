@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/barracudanetworks/wbc/database"
+	"github.com/barracudanetworks/wbd/database"
 	"github.com/gorilla/websocket"
 )
 
