@@ -39,13 +39,16 @@ AUTHOR(S):
    John Maguire <jmaguire@barracuda.com>
 
 COMMANDS:
-   run, r       run the webserver
-   url, u       add, remove, or list urls in rotation
-   install, i   install the database
-   clean        delete the database (WARNING: very destructive)
-   help, h      Shows a list of commands or help for one command
+   run, r	run the webserver
+   url, u	add, remove, or list urls in rotation
+   list, l	add, remove, or list url lists
+   assign, a	assign a client or url to a list
+   install, i	install the database
+   clean	delete the database (WARNING: very destructive)
+   help, h	Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --help, -h       show help
-   --version, -v    print the version
+   --help, -h		show help
+   --version, -v	print the version
+
 ```
