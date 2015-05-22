@@ -67,16 +67,16 @@ func (wh *welcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-type adminHandler struct{ App }
+type consoleHandler struct{ App }
 
-func (ah *adminHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (ah *consoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := ah.App.GetClient(r)
 
 	// Web address to use in template
 	addr := fmt.Sprintf("%s%s", r.Host, ah.App.Address)
 
 	// Load template, parse vars, write to client
-	t, _ := template.New("admin").Parse(adminTemplate)
+	t, _ := template.New("console").Parse(consoleTemplate)
 	t.Execute(w, struct {
 		Address    template.URL
 		Client     string

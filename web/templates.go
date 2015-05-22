@@ -315,7 +315,7 @@ const (
 </html>
 `
 
-	adminTemplate = `<!DOCTYPE html>
+	consoleTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">

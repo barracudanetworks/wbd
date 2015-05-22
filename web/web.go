@@ -40,7 +40,7 @@ func Start(c *config.Configuration) {
 	r.Handle("/", &indexHandler{a})
 	r.Handle("/ws", &websocketHandler{a})
 	r.Handle("/welcome", &welcomeHandler{a})
-	r.Handle("/admin", &adminHandler{a})
+	r.Handle("/console", &consoleHandler{a})
 
 	// Register mux router
 	http.Handle("/", r)
