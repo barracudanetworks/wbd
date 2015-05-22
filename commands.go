@@ -11,7 +11,6 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/howeyc/gopass"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func handleRun(c *cli.Context) {

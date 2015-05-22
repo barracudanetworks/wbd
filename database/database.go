@@ -1,6 +1,10 @@
 package database
 
-import "database/sql"
+import (
+	"database/sql"
+
+	_ "github.com/mattn/go-sqlite3"
+)
 
 const (
 	// schema
@@ -14,7 +18,7 @@ CREATE TABLE clients (
 	identifier  TEXT NOT NULL,
 	ip_address  TEXT NOT NULL,
 	last_ping   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	url_list_id INTEGER,
+	url_list_id INTEGER
 );
 
 CREATE TABLE url_lists (
