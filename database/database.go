@@ -49,7 +49,7 @@ CREATE TABLE url_list_url (
 	SELECT identifier, last_ping, ip_address, url_list_id
 	FROM clients WHERE identifier = ?;
 	`
-	sqlSetClientList      string = "UPDATE clients SET url_list_id = ? WHERE identifer = ?;"
+	sqlSetClientList      string = "UPDATE clients SET url_list_id = ? WHERE identifier = ?;"
 	sqlSetClientIpAddress string = "UPDATE clients SET ip_address = ? WHERE identifier = ?;"
 	sqlTouchClient        string = "UPDATE clients SET last_ping = CURRENT_TIMESTAMP;"
 

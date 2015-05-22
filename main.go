@@ -110,8 +110,8 @@ func main() {
 		},
 		{
 			Name:    "assign",
-			Aliases: []string{"l"},
-			Usage:   "assign a url to a list",
+			Aliases: []string{"a"},
+			Usage:   "assign a client or url to a list",
 
 			Action: handleAssign,
 
@@ -123,6 +123,10 @@ func main() {
 				cli.StringFlag{
 					Name:  "url,u",
 					Usage: "url to assign to list",
+				},
+				cli.StringFlag{
+					Name:  "client,c",
+					Usage: "client to assign to list",
 				},
 				cli.StringFlag{
 					Name:   "database,d",

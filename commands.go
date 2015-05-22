@@ -86,9 +86,10 @@ func handleAssign(c *cli.Context) {
 	}
 	log.Printf("Using database %s", c.String("database"))
 
-	assignList, assignUrl := c.String("list"), c.String("url")
-	if assignList == "" || assignUrl == "" {
-		log.Fatal("Must specify a URL and a list to assign it to")
+	assignList := c.String("list")
+	assignUrl, assignClient := c.String("url"), c.String("client")
+	if assignList == "" || (assignClient == "" && assignUrl == "") {
+		log.Fatal("Must specify a list, and a client or URL to assign to it")
 	}
 
 	db, err := database.Connect(c.String("database"))
@@ -97,8 +98,17 @@ func handleAssign(c *cli.Context) {
 		log.Fatal(err)
 	}
 
-	if err := db.AssignUrlToList(assignList, assignUrl); err != nil {
-		log.Fatal(err)
+	if assignUrl != "" {
+		if err := db.AssignUrlToList(assignList, assignUrl); err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Assigned URL %s to list %s", assignUrl, assignList)
+	}
+	if assignClient != "" {
+		if err := db.AssignClientToList(assignList, assignClient); err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Assigned client %s to list %s", assignClient, assignList)
 	}
 }
 
