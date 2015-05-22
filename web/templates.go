@@ -227,7 +227,7 @@ const (
 
 				attempts++;
 
-				wbcConnect(endpoint, rotator);
+				wbdConnect(endpoint, rotator);
 			}, time);
 		}
 		conn.onmessage = function(evt) {
@@ -390,7 +390,7 @@ const (
 			return Math.random() * maxInterval;
 		}
 
-		function wbcConnect(endpoint, inputElement, outputElement) {
+		function wbdConnect(endpoint, inputElement, outputElement) {
 			if (typeof endpoint === 'undefined') return false;
 			if (typeof inputElement === 'undefined') return false;
 			if (typeof outputElement === 'undefined') return false;
@@ -496,7 +496,7 @@ const (
 
 					attempts++;
 
-					wbcConnect(endpoint, inputElement, outputElement);
+					wbdConnect(endpoint, inputElement, outputElement);
 				}, time);
 			}
 
@@ -556,7 +556,7 @@ const (
 			}
 		}
 
-		wbcConnect(
+		wbdConnect(
 			{{ if ne .Client "" }}
 			// Connect to WebSocket server (provides control)
 			"ws://{{ .Address }}/ws?client={{ .Client }}",
