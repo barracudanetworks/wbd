@@ -126,9 +126,9 @@ func handleClient(c *cli.Context) {
 
 		for _, client := range clients {
 			if client.Alias == "" {
-				log.Printf("  %s [%s] - Last active %s", client.Identifier, client.IpAddress, client.LastPing)
+				log.Printf("  %s (%s) - Last active %s", client.Identifier, client.IpAddress, client.LastPing)
 			} else {
-				log.Printf("  %s (%s) [%s] - Last active %s", client.Alias, client.Identifier, client.IpAddress, client.LastPing)
+				log.Printf("  %s [%s] (%s) - Last active %s", client.Alias, client.Identifier, client.IpAddress, client.LastPing)
 			}
 		}
 	}
