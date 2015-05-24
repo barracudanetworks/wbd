@@ -80,6 +80,60 @@ func handleUrl(c *cli.Context) {
 	}
 }
 
+func handleClient(c *cli.Context) {
+	if _, err := os.Stat(c.String("database")); err != nil {
+		log.Fatal("database does not exist")
+	}
+	log.Printf("Using database %s", c.String("database"))
+
+	aliasClient, toAlias := c.String("alias"), c.String("to")
+	deleteClient := c.String("delete")
+
+	if aliasClient != "" && deleteClient != "" {
+		log.Fatal("Can't both remove and alias a client")
+	}
+
+	db, err := database.Connect(c.String("database"))
+	defer db.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if aliasClient != "" {
+		if toAlias == "" {
+			log.Fatal("No alias specified (use --to)")
+		}
+
+		log.Printf("Aliasing client '%s' to '%s'", aliasClient, toAlias)
+		if err := db.SetClientAlias(aliasClient, toAlias); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if deleteClient != "" {
+		log.Printf("Removing client '%s' from the database", deleteClient)
+		if err := db.DeleteClient(deleteClient); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if c.Bool("list") {
+		log.Print("Known clients:")
+		clients, err := db.FetchClients()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, client := range clients {
+			if client.Alias == "" {
+				log.Printf("  %s [%s] - Last active %s", client.Identifier, client.IpAddress, client.LastPing)
+			} else {
+				log.Printf("  %s (%s) [%s] - Last active %s", client.Alias, client.Identifier, client.IpAddress, client.LastPing)
+			}
+		}
+	}
+}
+
 func handleAssign(c *cli.Context) {
 	if _, err := os.Stat(c.String("database")); err != nil {
 		log.Fatal("database does not exist")

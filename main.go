@@ -109,6 +109,38 @@ func main() {
 			},
 		},
 		{
+			Name:    "client",
+			Aliases: []string{"c"},
+			Usage:   "alias, remove, or list clients",
+
+			Action: handleClient,
+
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "alias,a",
+					Usage: "alias a client's identifier to something human",
+				},
+				cli.StringFlag{
+					Name:  "to,t",
+					Usage: "name to alias client as",
+				},
+				cli.StringFlag{
+					Name:  "delete,r",
+					Usage: "remove specified client from database",
+				},
+				cli.BoolFlag{
+					Name:  "list,l",
+					Usage: "list known clients",
+				},
+				cli.StringFlag{
+					Name:   "database,d",
+					Value:  "wbd.db",
+					Usage:  "sqlite database location",
+					EnvVar: "WBD_DATABASE",
+				},
+			},
+		},
+		{
 			Name:    "assign",
 			Aliases: []string{"a"},
 			Usage:   "assign a client or url to a list",

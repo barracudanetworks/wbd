@@ -17,6 +17,7 @@ CREATE TABLE config (
 
 CREATE TABLE clients (
 	identifier  TEXT NOT NULL,
+	alias       TEXT NOT NULL,
 	ip_address  TEXT NOT NULL,
 	last_ping   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	url_list_id INTEGER NOT NULL DEFAULT 0
@@ -46,12 +47,15 @@ CREATE TABLE url_list_url (
 	VALUES(?, ?);
 	`
 	sqlGetClient string = `
-	SELECT identifier, last_ping, ip_address, url_list_id
-	FROM clients WHERE identifier = ?;
+	SELECT identifier, alias, ip_address, last_ping, url_list_id
+	FROM clients WHERE identifier = ? OR alias = ?;
 	`
-	sqlSetClientList      string = "UPDATE clients SET url_list_id = ? WHERE identifier = ?;"
+	sqlSetClientList      string = "UPDATE clients SET url_list_id = ? WHERE identifier = ? OR alias = ?;"
 	sqlSetClientIpAddress string = "UPDATE clients SET ip_address = ? WHERE identifier = ?;"
-	sqlTouchClient        string = "UPDATE clients SET last_ping = CURRENT_TIMESTAMP;"
+	sqlSetClientAlias     string = "UPDATE clients SET alias = ? WHERE identifier = ? OR alias = ?;"
+	sqlDeleteClient       string = "DELETE FROM clients WHERE identifier = ? OR alias = ?;"
+	sqlFetchClients       string = "SELECT identifier, alias, ip_address, last_ping, url_list_id FROM clients ORDER BY last_ping ASC;"
+	sqlTouchClient        string = "UPDATE clients SET last_ping = CURRENT_TIMESTAMP WHERE identifier = ?;"
 
 	// urls table
 	sqlFindUrlId string = "SELECT id FROM urls WHERE url = ?;"
@@ -83,8 +87,9 @@ type Database struct {
 
 type Client struct {
 	Identifier string
-	LastPing   string
+	Alias      string
 	IpAddress  string
+	LastPing   string
 	UrlListId  int
 }
 
@@ -98,8 +103,18 @@ func (db *Database) InsertClient(identifier string, ip_address string) (err erro
 	return
 }
 
+func (db *Database) DeleteClient(identifier string) (err error) {
+	_, err = db.Conn.Exec(sqlDeleteClient, identifier, identifier)
+	return
+}
+
 func (db *Database) SetClientIpAddress(identifier string, ip_address string) (err error) {
-	_, err = db.Conn.Exec(sqlSetClientIpAddress, identifier, ip_address)
+	_, err = db.Conn.Exec(sqlSetClientIpAddress, ip_address, identifier, identifier)
+	return
+}
+
+func (db *Database) SetClientAlias(identifier string, alias string) (err error) {
+	_, err = db.Conn.Exec(sqlSetClientAlias, alias, identifier, identifier)
 	return
 }
 
@@ -114,15 +129,45 @@ func (db *Database) AssignClientToList(name string, client_id string) (err error
 		return
 	}
 
-	_, err = db.Conn.Exec(sqlSetClientList, list_id, client_id)
+	_, err = db.Conn.Exec(sqlSetClientList, list_id, client_id, client_id)
+	return
+}
+
+func (db *Database) FetchClients() (clients []Client, err error) {
+	rows, err := db.Conn.Query(sqlFetchClients)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var client Client
+
+		err = rows.Scan(
+			&client.Identifier,
+			&client.Alias,
+			&client.IpAddress,
+			&client.LastPing,
+			&client.UrlListId)
+
+		if err != nil {
+			return
+		}
+
+		clients = append(clients, client)
+	}
+
+	err = rows.Err()
+
 	return
 }
 
 func (db *Database) GetClient(identifier string) (client Client, err error) {
-	err = db.Conn.QueryRow(sqlGetClient, identifier).Scan(
+	err = db.Conn.QueryRow(sqlGetClient, identifier, identifier).Scan(
 		&client.Identifier,
-		&client.LastPing,
+		&client.Alias,
 		&client.IpAddress,
+		&client.LastPing,
 		&client.UrlListId)
 
 	return
