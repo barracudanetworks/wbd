@@ -42,6 +42,7 @@ COMMANDS:
    run, r	run the webserver
    url, u	add, remove, or list urls in rotation
    list, l	add, remove, or list url lists
+   client, c	alias, remove, or list clients
    assign, a	assign a client or url to a list
    install, i	install the database
    clean	delete the database (WARNING: very destructive)
