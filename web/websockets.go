@@ -67,7 +67,9 @@ func (h *websocketHub) run(a *App) {
 				switch {
 				case err == sql.ErrNoRows:
 					log.Printf("Unknown client, creating record")
-					db.InsertClient(c.Id, c.IpAddress)
+					if err := db.InsertClient(c.Id, c.IpAddress); err != nil {
+						log.Fatal(err)
+					}
 				case err != nil:
 					log.Fatal(err)
 				default:

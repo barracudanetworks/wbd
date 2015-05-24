@@ -17,7 +17,7 @@ CREATE TABLE config (
 
 CREATE TABLE clients (
 	identifier  TEXT NOT NULL,
-	alias       TEXT NOT NULL,
+	alias       TEXT NOT NULL DEFAULT '',
 	ip_address  TEXT NOT NULL,
 	last_ping   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	url_list_id INTEGER NOT NULL DEFAULT 0
