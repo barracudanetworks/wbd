@@ -63,7 +63,7 @@ func (wh *welcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		RemoteAddr string
 	}{
 		id,
-		r.RemoteAddr[:strings.Index(r.RemoteAddr, ":")],
+		r.RemoteAddr[:strings.LastIndex(r.RemoteAddr, ":")],
 	})
 }
 
