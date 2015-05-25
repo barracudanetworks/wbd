@@ -4,26 +4,20 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math/rand"
 	"net/http"
-	"strings"
-	"time"
 )
 
 type indexHandler struct{ App }
 
 func (ih *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := ih.App.GetClient(r)
-	if id != "" {
-		log.Printf("Client '%s' loaded index from %s", id, r.RemoteAddr)
-	} else {
-		log.Printf("User loaded index from %s", r.RemoteAddr)
-	}
+	c := ih.App.GetClient(r)
 
 	// Web address to use in template
 	addr := fmt.Sprintf("%s%s", r.Host, ih.App.Address)
 
 	// Show welcome page by default
-	defaultUrl := fmt.Sprintf("http://%s/welcome?client=%s", addr, id)
+	defaultUrl := fmt.Sprintf("http://%s/welcome?client=%s", addr, c.Id)
 
 	// Get URLs from database
 	urls, err := ih.App.Database.FetchUrls()
@@ -46,7 +40,7 @@ func (ih *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}{
 		template.URL(addr),
 		template.URL(defaultUrl),
-		id,
+		c.Id,
 		urls,
 	})
 }
@@ -54,7 +48,7 @@ func (ih *indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type welcomeHandler struct{ App }
 
 func (wh *welcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := wh.App.GetClient(r)
+	c := wh.App.GetClient(r)
 
 	// Load template, parse vars, write to client
 	t, _ := template.New("welcome").Parse(welcomeTemplate)
@@ -62,15 +56,15 @@ func (wh *welcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Client     string
 		RemoteAddr string
 	}{
-		id,
-		r.RemoteAddr[:strings.LastIndex(r.RemoteAddr, ":")],
+		c.Id,
+		c.RemoteAddr,
 	})
 }
 
 type consoleHandler struct{ App }
 
 func (ah *consoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := ah.App.GetClient(r)
+	c := ah.App.GetClient(r)
 
 	// Web address to use in template
 	addr := fmt.Sprintf("%s%s", r.Host, ah.App.Address)
@@ -83,8 +77,8 @@ func (ah *consoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		RemoteAddr string
 	}{
 		template.URL(addr),
-		id,
-		r.RemoteAddr[:strings.Index(r.RemoteAddr, ":")],
+		c.Id,
+		c.RemoteAddr,
 	})
 }
 
@@ -98,16 +92,11 @@ func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// track whether this is a "registered" client or not
 	var generic bool
 
-	id := wh.App.GetClient(r)
-	if id == "" {
+	c := wh.App.GetClient(r)
+	if c.Id == "" {
 		generic = true
-
-		id = fmt.Sprintf("User (%d)", time.Now().UnixNano())
-		log.Printf("%s connected to websocket from %s", id, r.RemoteAddr)
 	} else {
 		generic = false
-
-		log.Printf("Client '%s' connected to websocket from %s", id, r.RemoteAddr)
 	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -116,15 +105,24 @@ func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c := &websocketClient{
+	id := c.Id
+	if id == "" {
+		chars := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"}
+		id = "Anonymous "
+		for i := 0; i < 3; i++ {
+			id += chars[rand.Intn(len(chars))]
+		}
+	}
+
+	client := &websocketClient{
 		Id:        id,
 		Generic:   generic,
-		IpAddress: r.RemoteAddr,
+		IpAddress: c.RemoteAddr,
 		send:      make(chan *websocketMessage),
 		ws:        ws,
 	}
 
-	hub.register <- c
-	go c.writePump()
-	c.readPump(wh.App.Database)
+	hub.register <- client
+	go client.writePump()
+	client.readPump(wh.App.Database)
 }
