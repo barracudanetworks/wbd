@@ -74,7 +74,9 @@ func (h *websocketHub) run(a *App) {
 					log.Fatal(err)
 				default:
 					log.Printf("Client last seen %s from %s", client.LastPing, client.IpAddress)
+
 					db.TouchClient(client.Identifier)
+					db.SetClientIpAddress(client.Identifier, c.IpAddress)
 				}
 			} else {
 				log.Printf("Not attempting to track generic client")
