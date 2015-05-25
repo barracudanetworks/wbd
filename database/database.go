@@ -109,7 +109,7 @@ func (db *Database) DeleteClient(identifier string) (err error) {
 }
 
 func (db *Database) SetClientIpAddress(identifier string, ip_address string) (err error) {
-	_, err = db.Conn.Exec(sqlSetClientIpAddress, ip_address, identifier, identifier)
+	_, err = db.Conn.Exec(sqlSetClientIpAddress, ip_address, identifier)
 	return
 }
 
