@@ -85,7 +85,7 @@ const (
 			console.log("Initializing rotator");
 
 			// Try to use the default URLs if we don't have any
-			if (urls.length < 1) {
+			if (urls == null || urls.length < 1) {
 				console.error("Can't run rotator -- no URLs to rotate");
 				return;
 			}
