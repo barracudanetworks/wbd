@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"math/rand"
 	"net/http"
 )
 
@@ -89,15 +88,7 @@ func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 	}
 
-	// track whether this is a "registered" client or not
-	var generic bool
-
 	c := wh.App.GetClient(r)
-	if c.Id == "" {
-		generic = true
-	} else {
-		generic = false
-	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -106,21 +97,8 @@ func (wh *websocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := c.Id
-	if id == "" {
-		chars := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"}
-		id = "Anonymous "
-		for i := 0; i < 3; i++ {
-			id += chars[rand.Intn(len(chars))]
-		}
-	}
 
-	client := &websocketClient{
-		Id:        id,
-		Generic:   generic,
-		IpAddress: c.RemoteAddr,
-		send:      make(chan *websocketMessage),
-		ws:        ws,
-	}
+	client := NewWebsocketClient(wh.Database, ws, id, r.RemoteAddr)
 
 	hub.register <- client
 	go client.writePump()

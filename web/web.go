@@ -20,9 +20,17 @@ type App struct {
 type Client struct {
 	Id         string
 	RemoteAddr string
+	Database   *database.Database
+}
+
+func (c *Client) Touch() (err error) {
+	err = c.Database.TouchClient(c.Id)
+	return
 }
 
 func (a *App) GetClient(r *http.Request) (client Client) {
+	client.Database = a.Database
+
 	client.Id = r.FormValue("client")
 
 	// attempt to set via X-Forwarded-For header
@@ -58,7 +66,7 @@ func (a *App) Route(route string) http.Handler {
 		if c.Id == "" {
 			log.Printf("Anonymous client loaded %s from %s", route, c.RemoteAddr)
 		} else {
-			log.Printf("Client %s loaded %s from %s", route, c.Id, c.RemoteAddr)
+			log.Printf("Client %s loaded %s from %s", c.Id, route, c.RemoteAddr)
 		}
 
 		handler.ServeHTTP(w, r)

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/barracudanetworks/wbd/database"
@@ -75,8 +76,9 @@ func (h *websocketHub) run(a *App) {
 				default:
 					log.Printf("Client last seen %s from %s", client.LastPing, client.IpAddress)
 
-					db.TouchClient(client.Identifier)
-					db.SetClientIpAddress(client.Identifier, c.IpAddress)
+					c.Database = db
+					c.Touch()
+					c.UpdateIpAddress()
 				}
 			} else {
 				log.Printf("Not attempting to track generic client")
@@ -140,9 +142,47 @@ type websocketClient struct {
 	IpAddress  string
 	Controller bool
 	Generic    bool
+	Database   *database.Database
 
 	ws   *websocket.Conn
 	send chan *websocketMessage
+}
+
+func NewWebsocketClient(db *database.Database, ws *websocket.Conn, id string, ipAddress string) (wc *websocketClient) {
+	generic := false
+
+	if id == "" {
+		generic = true
+
+		chars := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"}
+		id = "Anonymous "
+		for i := 0; i < 3; i++ {
+			id += chars[rand.Intn(len(chars))]
+		}
+	}
+
+	wc = &websocketClient{
+		Id:         id,
+		IpAddress:  ipAddress,
+		Controller: false,
+		Generic:    generic,
+		Database:   db,
+
+		send: make(chan *websocketMessage),
+		ws:   ws,
+	}
+
+	return
+}
+
+func (c *websocketClient) Touch() error {
+	log.Printf("Updating last active timestamp for client '%s'", c.Id)
+	return c.Database.TouchClient(c.Id)
+}
+
+func (c *websocketClient) UpdateIpAddress() error {
+	log.Printf("Updating IP address in DB for client '%s'", c.Id)
+	return c.Database.SetClientIpAddress(c.Id, c.IpAddress)
 }
 
 func (c *websocketClient) write(mt int, payload []byte) error {
@@ -195,7 +235,12 @@ func (c *websocketClient) readPump(db *database.Database) {
 
 	c.ws.SetReadLimit(maxMessageSize)
 	c.ws.SetReadDeadline(time.Now().Add(pongWait))
-	c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.ws.SetPongHandler(
+		func(string) error {
+			c.ws.SetReadDeadline(time.Now().Add(pongWait))
+			c.Touch()
+			return nil
+		})
 
 	for {
 		_, message, err := c.ws.ReadMessage()
@@ -203,6 +248,8 @@ func (c *websocketClient) readPump(db *database.Database) {
 			log.Printf("Connection closed to client '%s'", c.Id)
 			break
 		}
+
+		c.Touch()
 
 		var wm websocketMessage
 		if err := json.Unmarshal(message, &wm); err != nil {
