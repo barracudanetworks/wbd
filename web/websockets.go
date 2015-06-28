@@ -257,6 +257,11 @@ func (c *websocketClient) readPump(db *database.Database) {
 }
 
 func urlUpdateMessage(urls []string) (wm *websocketMessage, err error) {
+	// Prevent empty slices from being marshalled into null
+	if urls == nil {
+		urls = make([]string, 0)
+	}
+
 	wm = &websocketMessage{
 		Action: "updateUrls",
 		Data: struct {
