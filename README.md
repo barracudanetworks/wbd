@@ -1,5 +1,6 @@
-# wbd (Wallboard Daemon)
 [![Build Status](https://travis-ci.org/barracudanetworks/wbd.svg?branch=master)](https://travis-ci.org/barracudanetworks/wbd)
+
+# wbd (Wallboard Daemon)
 A wallboard daemon. Runs a full-screened iframe and some Javascript that allows for dynamic updating of wallboards. Useful if you have many clients that you would like to display metrics on.
 
 Requirements
