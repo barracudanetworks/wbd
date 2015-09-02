@@ -55,18 +55,20 @@ CREATE TABLE url_list_url (
 	sqlDeleteClient       string = "DELETE FROM clients WHERE identifier = ? OR alias = ?;"
 	sqlFetchClients       string = "SELECT identifier, alias, ip_address, last_ping, url_list_id FROM clients ORDER BY last_ping ASC;"
 	sqlTouchClient        string = "UPDATE clients SET last_ping = CURRENT_TIMESTAMP WHERE identifier = ?;"
+	sqlCleanOrphanClients string = "UPDATE clients SET url_list_id = 0 WHERE url_list_id = ?;"
 
 	// urls table
-	sqlFindUrlId string = "SELECT id FROM urls WHERE url = ?;"
-	sqlInsertUrl string = "INSERT INTO urls(url) VALUES(?);"
-	sqlFetchUrls string = "SELECT url FROM urls;"
-	sqlDeleteUrl string = "DELETE FROM urls WHERE url = ?;"
+	sqlFindUrlId       string = "SELECT id FROM urls WHERE url = ?;"
+	sqlInsertUrl       string = "INSERT INTO urls(url) VALUES(?);"
+	sqlFetchUrls       string = "SELECT url FROM urls;"
+	sqlDeleteUrl       string = "DELETE FROM urls WHERE url = ?;"
+	sqlCleanOrphanUrls string = "UPDATE url_list_url SET url_list_id = 0 WHERE url_list_id = ?;"
 
 	// url_lists table
 	sqlFindListId string = "SELECT id FROM url_lists WHERE name = ?;"
 	sqlInsertList string = "INSERT INTO url_lists(name) VALUES(?);"
 	sqlFetchLists string = "SELECT name FROM url_lists;"
-	sqlDeleteList string = "DELETE FROM url_lists WHERE name = ?;"
+	sqlDeleteList string = "DELETE FROM url_lists WHERE id = ?;"
 
 	// url_lists_url table
 	sqlInsertListUrl string = "INSERT INTO url_list_url(url_list_id, url_id) VALUES(?, ?);"
@@ -188,7 +190,26 @@ func (db *Database) InsertList(name string) (err error) {
 }
 
 func (db *Database) DeleteList(name string) (err error) {
-	_, err = db.Conn.Exec(sqlDeleteList, name)
+	id, err := db.FindListId(name)
+	if err != nil {
+		return
+	}
+
+	_, err = db.Conn.Exec(sqlDeleteList, id)
+	if err != nil {
+		return
+	}
+
+	_, err = db.Conn.Exec(sqlCleanOrphanClients, id)
+	if err != nil {
+		return
+	}
+
+	_, err = db.Conn.Exec(sqlCleanOrphanUrls, id)
+	if err != nil {
+		return
+	}
+
 	return
 }
 
