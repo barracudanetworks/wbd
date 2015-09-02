@@ -26,6 +26,7 @@ CREATE TABLE url_lists (
     id INTEGER PRIMARY KEY,
     name TEXT
 );
+INSERT INTO url_lists (id, name) VALUES(0, "Default");
 
 CREATE TABLE urls (
 	id INTEGER PRIMARY KEY,
@@ -80,6 +81,8 @@ CREATE TABLE url_list_url (
 	`
 
 	sqlInsertConfig string = "INSERT INTO config(identifier, value) VALUES(?, ?);"
+
+	DefaultList int = 0
 )
 
 type Database struct {
@@ -258,21 +261,17 @@ func (db *Database) FetchUrls() (urls []string, err error) {
 }
 
 func (db *Database) FetchUrlsByClientId(identifier string) (urls []string, err error) {
-	var fetch_global bool = true
-
 	info, err := db.GetClient(identifier)
-
-	if err == nil && info.UrlListId != 0 {
-		urls, err = db.FetchListUrlsById(info.UrlListId)
-		if err == nil {
-			// found urls already, no need to fetch global url list
-			fetch_global = false
-		}
+	if err != nil {
+		return
 	}
 
-	if fetch_global {
-		urls, err = db.FetchUrls()
+	urls, err = db.FetchListUrlsById(info.UrlListId)
+	if err == nil {
+		return
 	}
+
+	urls, err = db.FetchListUrlsById(DefaultList)
 
 	return
 }

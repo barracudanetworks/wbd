@@ -71,10 +71,17 @@ func TestLists(t *testing.T) {
 
 	db.CreateTables()
 
-	err := db.InsertList("test")
+	list_id, err := db.FindListId("Default")
+	assert.Nil(err)
+	assert.Equal(DefaultList, list_id)
+
+	list_id, err = db.FindListId("NONEXISTENT")
+	assert.NotNil(err)
+
+	err = db.InsertList("test")
 	assert.Nil(err)
 
-	list_id, err := db.FindListId("test")
+	list_id, err = db.FindListId("test")
 	assert.Nil(err)
 	assert.Equal(1, list_id)
 
@@ -93,7 +100,7 @@ func TestLists(t *testing.T) {
 
 	client, err := db.GetClient("client")
 	assert.Nil(err)
-	assert.Equal(0, client.UrlListId, "Client should not be assigned to a list yet")
+	assert.Equal(DefaultList, client.UrlListId, "Client should not be assigned to a list yet")
 
 	err = db.AssignClientToList("test", "client")
 	assert.Nil(err)
@@ -111,5 +118,5 @@ func TestLists(t *testing.T) {
 
 	client, err = db.GetClient("client")
 	assert.Nil(err)
-	assert.Equal(0, client.UrlListId, "Client should have been removed from the test list")
+	assert.Equal(DefaultList, client.UrlListId, "Client should have been removed from the test list")
 }
