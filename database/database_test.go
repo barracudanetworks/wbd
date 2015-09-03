@@ -84,6 +84,9 @@ func TestLists(t *testing.T) {
 	err = db.InsertList("test")
 	assert.Nil(err)
 
+	err = db.InsertList("test")
+	assert.NotNil(err, "You should not be able to create a list with the same name as another list")
+
 	list_id, err = db.FindListId("test")
 	assert.Nil(err)
 	assert.Equal(1, list_id)

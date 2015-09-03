@@ -189,6 +189,15 @@ func (db *Database) DeleteUrl(url string) (err error) {
 }
 
 func (db *Database) InsertList(name string) (err error) {
+	_, err = db.FindListId(name)
+	if err != nil && err != sql.ErrNoRows {
+		return
+	}
+
+	if err == nil {
+		return errors.New("A URL list already exists with that name")
+	}
+
 	_, err = db.Conn.Exec(sqlInsertList, name)
 	return
 }
