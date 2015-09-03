@@ -160,6 +160,10 @@ func main() {
 					Name:  "client,c",
 					Usage: "client to assign to list",
 				},
+				cli.BoolFlag{
+					Name:  "delete,d",
+					Usage: "remove association between a list and a client or url",
+				},
 				cli.StringFlag{
 					Name:   "database,D",
 					Value:  "wbd.db",

@@ -101,6 +101,15 @@ func TestLists(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(1, len(urls), "There should be a single URL in the list")
 
+	err = db.RemoveUrlFromList("test", "http://barracudanetworks.com/")
+	assert.Nil(err)
+
+	urls, err = db.FetchListUrlsById(list_id)
+	assert.Nil(err)
+	assert.Equal(0, len(urls), "There should be no URLs in the list")
+
+	_ = db.AssignUrlToList("test", "http://barracudanetworks.com/")
+
 	err = db.InsertClient("client", "0.0.0.0")
 	assert.Nil(err)
 
@@ -114,6 +123,15 @@ func TestLists(t *testing.T) {
 	client, err = db.GetClient("client")
 	assert.Nil(err)
 	assert.Equal(list_id, client.UrlListId, "Client should be assigned to the test list")
+
+	err = db.RemoveClientFromList("client")
+	assert.Nil(err)
+
+	client, err = db.GetClient("client")
+	assert.Nil(err)
+	assert.Equal(DefaultList, client.UrlListId, "Client should be assigned back to the Default list")
+
+	_ = db.AssignClientToList("test", "client")
 
 	err = db.DeleteList("test")
 	assert.Nil(err)

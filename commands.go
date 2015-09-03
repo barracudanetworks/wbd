@@ -140,9 +140,11 @@ func handleAssign(c *cli.Context) {
 	}
 	log.Printf("Using database %s", c.String("database"))
 
+	deleteFlag := c.Bool("delete")
 	assignList := c.String("list")
 	assignUrl, assignClient := c.String("url"), c.String("client")
-	if assignList == "" || (assignClient == "" && assignUrl == "") {
+
+	if (assignList == "" && (!deleteFlag || assignClient == "")) || (assignClient == "" && assignUrl == "") {
 		log.Fatal("Must specify a list, and a client or URL to assign to it")
 	}
 
@@ -153,16 +155,32 @@ func handleAssign(c *cli.Context) {
 	}
 
 	if assignUrl != "" {
-		if err := db.AssignUrlToList(assignList, assignUrl); err != nil {
-			log.Fatal(err)
+		// delete association if delete flag is true
+		if deleteFlag {
+			if err := db.RemoveUrlFromList(assignList, assignUrl); err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("Removed URL %s from list %s", assignUrl, assignList)
+		} else {
+			if err := db.AssignUrlToList(assignList, assignUrl); err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("Assigned URL %s to list %s", assignUrl, assignList)
 		}
-		log.Printf("Assigned URL %s to list %s", assignUrl, assignList)
 	}
 	if assignClient != "" {
-		if err := db.AssignClientToList(assignList, assignClient); err != nil {
-			log.Fatal(err)
+		// delete association if delete flag is true
+		if deleteFlag {
+			if err := db.RemoveClientFromList(assignClient); err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("Assigned client %s back to the Default list", assignClient)
+		} else {
+			if err := db.AssignClientToList(assignList, assignClient); err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("Assigned client %s to list %s", assignClient, assignList)
 		}
-		log.Printf("Assigned client %s to list %s", assignClient, assignList)
 	}
 }
 

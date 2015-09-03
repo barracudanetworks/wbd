@@ -74,7 +74,7 @@ CREATE TABLE url_list_url (
 
 	// url_lists_url table
 	sqlInsertListUrl string = "INSERT INTO url_list_url(url_list_id, url_id) VALUES(?, ?);"
-	sqlDeleteListUrl string = "DELETE FROM url_list_url WHERE id = ?;"
+	sqlDeleteListUrl string = "DELETE FROM url_list_url WHERE url_list_id = ? AND url_id = ?;"
 	sqlFetchListUrls string = `
 	SELECT url FROM urls
 	INNER JOIN url_list_url ON url_list_url.url_id = urls.id
@@ -135,6 +135,11 @@ func (db *Database) AssignClientToList(name string, client_id string) (err error
 	}
 
 	_, err = db.Conn.Exec(sqlSetClientList, list_id, client_id, client_id)
+	return
+}
+
+func (db *Database) RemoveClientFromList(client_id string) (err error) {
+	_, err = db.Conn.Exec(sqlSetClientList, DefaultList, client_id, client_id)
 	return
 }
 
@@ -359,6 +364,22 @@ func (db *Database) AssignUrlToList(name string, url string) (err error) {
 	}
 
 	_, err = db.Conn.Exec(sqlInsertListUrl, list_id, url_id)
+	return
+
+}
+
+func (db *Database) RemoveUrlFromList(name string, url string) (err error) {
+	list_id, err := db.FindListId(name)
+	if err != nil {
+		return
+	}
+
+	url_id, err := db.FindUrlId(url)
+	if err != nil {
+		return
+	}
+
+	_, err = db.Conn.Exec(sqlDeleteListUrl, list_id, url_id)
 	return
 
 }
