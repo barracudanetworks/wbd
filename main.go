@@ -45,7 +45,7 @@ func main() {
 					EnvVar: "WBD_PORT",
 				},
 				cli.StringFlag{
-					Name:   "database,d",
+					Name:   "database,D",
 					Value:  "wbd.db",
 					Usage:  "sqlite database location",
 					EnvVar: "WBD_DATABASE",
@@ -65,7 +65,7 @@ func main() {
 					Usage: "add specified url to rotation",
 				},
 				cli.StringFlag{
-					Name:  "delete,r",
+					Name:  "delete,d",
 					Usage: "remove specified url from rotation",
 				},
 				cli.BoolFlag{
@@ -73,7 +73,7 @@ func main() {
 					Usage: "list urls in rotation (can be combined with --delete or --add)",
 				},
 				cli.StringFlag{
-					Name:   "database,d",
+					Name:   "database,D",
 					Value:  "wbd.db",
 					Usage:  "sqlite database location",
 					EnvVar: "WBD_DATABASE",
@@ -93,7 +93,7 @@ func main() {
 					Usage: "create a new list",
 				},
 				cli.StringFlag{
-					Name:  "delete,r",
+					Name:  "delete,d",
 					Usage: "remove an existing list",
 				},
 				cli.BoolFlag{
@@ -101,7 +101,7 @@ func main() {
 					Usage: "list url lists in database (can be combined with --delete or --add)",
 				},
 				cli.StringFlag{
-					Name:   "database,d",
+					Name:   "database,D",
 					Value:  "wbd.db",
 					Usage:  "sqlite database location",
 					EnvVar: "WBD_DATABASE",
@@ -125,7 +125,7 @@ func main() {
 					Usage: "name to alias client as",
 				},
 				cli.StringFlag{
-					Name:  "delete,r",
+					Name:  "delete,d",
 					Usage: "remove specified client from database",
 				},
 				cli.BoolFlag{
@@ -133,7 +133,7 @@ func main() {
 					Usage: "list known clients",
 				},
 				cli.StringFlag{
-					Name:   "database,d",
+					Name:   "database,D",
 					Value:  "wbd.db",
 					Usage:  "sqlite database location",
 					EnvVar: "WBD_DATABASE",
@@ -161,7 +161,7 @@ func main() {
 					Usage: "client to assign to list",
 				},
 				cli.StringFlag{
-					Name:   "database,d",
+					Name:   "database,D",
 					Value:  "wbd.db",
 					Usage:  "sqlite database location",
 					EnvVar: "WBD_DATABASE",
@@ -177,7 +177,7 @@ func main() {
 
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:   "database,d",
+					Name:   "database,D",
 					Value:  "wbd.db",
 					Usage:  "sqlite database location",
 					EnvVar: "WBD_DATABASE",
@@ -192,7 +192,7 @@ func main() {
 
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:   "database,d",
+					Name:   "database,D",
 					Value:  "wbd.db",
 					Usage:  "sqlite database location",
 					EnvVar: "WBD_DATABASE",
