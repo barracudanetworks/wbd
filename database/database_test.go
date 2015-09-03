@@ -75,6 +75,9 @@ func TestLists(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(DefaultList, list_id)
 
+	err = db.DeleteList("Default")
+	assert.NotNil(err, "You should not be able to delete the Default list")
+
 	list_id, err = db.FindListId("NONEXISTENT")
 	assert.NotNil(err)
 

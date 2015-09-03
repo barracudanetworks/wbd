@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -196,6 +197,10 @@ func (db *Database) DeleteList(name string) (err error) {
 	id, err := db.FindListId(name)
 	if err != nil {
 		return
+	}
+
+	if id == DefaultList {
+		return errors.New("Cannot delete the Default URL list")
 	}
 
 	_, err = db.Conn.Exec(sqlDeleteList, id)
