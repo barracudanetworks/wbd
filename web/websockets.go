@@ -111,7 +111,7 @@ func (h *websocketHub) run(a *App) {
 			// Send the JSON to all connected clients
 			for c := range h.connections {
 				urls, err := db.FetchUrlsByClientId(c.Id)
-				if err != nil {
+				if err != nil && err != sql.ErrNoRows {
 					log.Fatal(err)
 				}
 
@@ -149,6 +149,8 @@ type websocketClient struct {
 }
 
 func NewWebsocketClient(db *database.Database, ws *websocket.Conn, id string, ipAddress string) (wc *websocketClient) {
+	rand.Seed(time.Now().Unix())
+
 	generic := false
 
 	if id == "" {
@@ -264,7 +266,7 @@ func (c *websocketClient) readPump(db *database.Database) {
 			c.Controller = true
 
 			urls, err := db.FetchUrlsByClientId(c.Id)
-			if err != nil {
+			if err != nil && err != sql.ErrNoRows {
 				log.Fatal(err)
 			}
 
@@ -281,7 +283,7 @@ func (c *websocketClient) readPump(db *database.Database) {
 			log.Printf("Client '%s' requested URLs", c.Id)
 
 			urls, err := db.FetchUrlsByClientId(c.Id)
-			if err != nil {
+			if err != nil && err != sql.ErrNoRows {
 				log.Fatal(err)
 			}
 
