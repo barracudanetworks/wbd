@@ -242,7 +242,7 @@ func handleInstall(c *cli.Context) {
 
 	var (
 		path     string
-		password string
+		password []byte
 	)
 
 	path = c.String("database")
@@ -254,7 +254,12 @@ func handleInstall(c *cli.Context) {
 
 	if resp := confirmDefault("Would you like to set a password?", true); resp == true {
 		fmt.Printf("Password: ")
-		password = string(gopass.GetPasswd())
+
+		var err error
+		password, err = gopass.GetPasswd()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	log.Printf("Creating database at %s", path)
@@ -279,8 +284,8 @@ func handleInstall(c *cli.Context) {
 	}
 
 	// Insert password if one was given
-	if password != "" {
-		if err = db.InsertConfig("password", password); err != nil {
+	if len(password) == 0 {
+		if err = db.InsertConfig("password", string(password)); err != nil {
 			tx.Rollback()
 			log.Fatal(err)
 		}
