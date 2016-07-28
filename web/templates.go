@@ -78,17 +78,13 @@ const (
 		var currentIndex = 0;
 		var urls = ['{{ .DefaultUrl }}'];
 		var duration = duration;
+
 		var rotateInterval;
+		var currentUrl = '{{ .DefaultUrl }}';
 
 		this.init = function() {
 			// Load first URL when initialized
 			console.log("Initializing rotator");
-
-			// Try to use the default URLs if we don't have any
-			if (urls == null || urls.length < 1) {
-				console.error("Can't run rotator -- no URLs to rotate");
-				return;
-			}
 
 			// Reset index in case this is a re-init
 			currentIndex = 0;
@@ -107,6 +103,12 @@ const (
 				return;
 			}
 
+			// Try to use the default URLs if we don't have any
+			if (newUrls == null || newUrls.length < 1) {
+				console.warn("Updated list was empty -- using default URL");
+				newUrls = ['{{ .DefaultUrl }}'];
+			}
+
 			// Only update if URLs changed -- this reinits the rotator
 			if (urls.equals(newUrls) === false) {
 				console.log("Current URLs:", urls);
@@ -119,12 +121,22 @@ const (
 		};
 
 		this.load = function(url) {
-			console.info("Loading URL:", url)
+			// If there's only one URL in our list, and it's the one we're on,
+			// don't waste time refreshing
+			if (currentUrl == url)
+			{
+				console.log("Skipping rotation because URL hasn't changed");
+				return;
+			}
+
+			currentUrl = url;
+
+			console.info("Loading URL:", currentUrl)
 
 			$("<iframe id='iframe-" + (++frameId) + "'></iframe>").appendTo($('#iframe-wrapper'));
 			$newFrame = $('#iframe-' + frameId);
 
-			$newFrame.attr('src', url);
+			$newFrame.attr('src', currentUrl);
 			$newFrame.addClass('loading');
 
 			$newFrame.on('load', function() {
@@ -195,7 +207,7 @@ const (
 				self.next();
 			}, duration * 1000);
 
-			console.log("Rotation scheduled for every ", duration, "seconds");
+			console.log("Rotation scheduled for every", duration, "seconds");
 		};
 
 		this.init();
@@ -220,7 +232,7 @@ const (
 
 			// attempt reconnection
 			var time = generateInterval(attempts);
-			console.log("Attempting reconnection in " + time + " milliseconds")
+			console.log("Attempting reconnection in", time, "milliseconds")
 
 			setTimeout(function() {
 				console.log("Attempting reconnection");
