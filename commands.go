@@ -13,7 +13,7 @@ import (
 	"github.com/howeyc/gopass"
 )
 
-func handleRun(c *cli.Context) {
+func handleRun(c *cli.Context) error {
 	conf := &config.Configuration{
 		ListenAddress: c.String("listen"),
 		ListenPort:    c.Int("port"),
@@ -34,9 +34,11 @@ func handleRun(c *cli.Context) {
 	}
 
 	web.Start(conf)
+
+	return nil
 }
 
-func handleUrl(c *cli.Context) {
+func handleUrl(c *cli.Context) error {
 	if _, err := os.Stat(c.String("database")); err != nil {
 		log.Fatal("database does not exist")
 	}
@@ -78,9 +80,11 @@ func handleUrl(c *cli.Context) {
 			log.Print("  ", url)
 		}
 	}
+
+	return nil
 }
 
-func handleClient(c *cli.Context) {
+func handleClient(c *cli.Context) error {
 	if _, err := os.Stat(c.String("database")); err != nil {
 		log.Fatal("database does not exist")
 	}
@@ -132,9 +136,11 @@ func handleClient(c *cli.Context) {
 			}
 		}
 	}
+
+	return nil
 }
 
-func handleAssign(c *cli.Context) {
+func handleAssign(c *cli.Context) error {
 	if _, err := os.Stat(c.String("database")); err != nil {
 		log.Fatal("database does not exist")
 	}
@@ -182,9 +188,11 @@ func handleAssign(c *cli.Context) {
 			log.Printf("Assigned client %s to list %s", assignClient, assignList)
 		}
 	}
+
+	return nil
 }
 
-func handleList(c *cli.Context) {
+func handleList(c *cli.Context) error {
 	if _, err := os.Stat(c.String("database")); err != nil {
 		log.Fatal("database does not exist")
 	}
@@ -235,9 +243,11 @@ func handleList(c *cli.Context) {
 			}
 		}
 	}
+
+	return nil
 }
 
-func handleInstall(c *cli.Context) {
+func handleInstall(c *cli.Context) error {
 	log.Print("Starting installation")
 
 	var (
@@ -293,9 +303,11 @@ func handleInstall(c *cli.Context) {
 
 	tx.Commit()
 	log.Print("Database created")
+
+	return nil
 }
 
-func handleClean(c *cli.Context) {
+func handleClean(c *cli.Context) error {
 	database := c.String("database")
 	log.Printf("Removing database at %s", database)
 
@@ -308,4 +320,6 @@ func handleClean(c *cli.Context) {
 	}
 
 	log.Print("Database removed")
+
+	return nil
 }
